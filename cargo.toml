@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "luoshu",
+    "crates/*",
+]
+exclude = [
+    "examples/*",
+]
