@@ -2,5 +2,7 @@
 members = [
     "luoshu",
     "crates/*",
+]
+exclude = [
     "examples/*",
 ]
