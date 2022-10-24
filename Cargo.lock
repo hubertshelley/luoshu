@@ -41,6 +41,13 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "configuration"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "core",
+ "serde",
+ "serde_json",
+ "uuid",
+]
 
 [[package]]
 name = "core"
@@ -213,6 +220,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "once_cell"
+version = "1.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e82dad04139b71a90c080c8463fe0dc7902db5192d939bd0950f074d014339e1"
+
+[[package]]
 name = "parking_lot"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -376,11 +389,38 @@ name = "sled_storage"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "configuration",
  "core",
  "namespace",
+ "once_cell",
  "registry",
  "serde_json",
  "sled",
+ "tokio",
+]
+
+[[package]]
+name = "sled_storage_test"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "configuration",
+ "core",
+ "namespace",
+ "registry",
+ "sled_storage",
+ "tokio",
+]
+
+[[package]]
+name = "sled_storage_test1"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "configuration",
+ "core",
+ "sled_storage",
+ "tokio",
 ]
 
 [[package]]

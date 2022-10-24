@@ -9,7 +9,8 @@ pub struct NamespaceStorage {
 }
 
 impl NamespaceStorage {
-    fn new(db: sled::Db) -> Self {
+    /// 创建命名空间存储
+    pub fn new(db: sled::Db) -> Self {
         Self {
             db,
             key: "NamespaceStorage".to_string(),

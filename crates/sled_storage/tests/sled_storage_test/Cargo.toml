@@ -1,0 +1,16 @@
+[package]
+name = "sled_storage_test"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.66"
+tokio = { version = "1.21.2", features = ["full"] }
+
+sled_storage = { path = "../../../sled_storage" }
+configuration = { path = "../../../configuration" }
+namespace = { path = "../../../namespace" }
+registry = { path = "../../../registry" }
+core = { path = "../../../core" }

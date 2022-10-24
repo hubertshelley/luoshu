@@ -2,6 +2,8 @@
 members = [
     "luoshu",
     "crates/*",
+    "crates/*/tests/*",
+    "tests/*"
 ]
 exclude = [
     "examples/*",
