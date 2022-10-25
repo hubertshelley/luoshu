@@ -46,7 +46,7 @@ impl Registry {
 /// 注册中心存储
 pub struct RegistryStore {
     connection: Box<dyn Connection>,
-    storage: Box<dyn Storage<Target = Registry>>,
+    storage: Box<dyn Storage<Target=Vec<Registry>>>,
     /// 注册中心列表
     pub registries: Vec<Registry>,
 }
@@ -55,7 +55,7 @@ impl RegistryStore {
     /// 创建注册中心存储
     pub fn new(
         connection: Box<dyn Connection>,
-        storage: Box<dyn Storage<Target = Registry>>,
+        storage: Box<dyn Storage<Target=Vec<Registry>>>,
     ) -> Self {
         Self {
             connection,

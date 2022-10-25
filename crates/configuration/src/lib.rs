@@ -38,7 +38,7 @@ impl Configurator {
 /// 配置中心存储
 pub struct ConfiguratorStore {
     connection: Box<dyn Connection>,
-    storage: Box<dyn Storage<Target = Configurator>>,
+    storage: Box<dyn Storage<Target=Vec<Configurator>>>,
     /// 配置中心列表
     pub configurators: Vec<Configurator>,
 }
@@ -47,7 +47,7 @@ impl ConfiguratorStore {
     /// 创建配置中心存储
     pub fn new(
         connection: Box<dyn Connection>,
-        storage: Box<dyn Storage<Target = Configurator>>,
+        storage: Box<dyn Storage<Target=Vec<Configurator>>>,
     ) -> Self {
         Self {
             connection,

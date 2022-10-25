@@ -18,9 +18,9 @@ impl RegistryStorage {
 }
 
 impl Storage for RegistryStorage {
-    type Target = Registry;
+    type Target = Vec<Registry>;
 
-    fn save(&self, values: Vec<Self::Target>) -> Result<()> {
+    fn save(&self, values: Self::Target) -> Result<()> {
         self.db
             .insert(
                 self.key.as_bytes(),
@@ -30,7 +30,7 @@ impl Storage for RegistryStorage {
         Ok(())
     }
 
-    fn load(&mut self) -> Result<Vec<Self::Target>> {
+    fn load(&mut self) -> Result<Self::Target> {
         let _data = self.db.get(self.key.as_bytes()).unwrap();
         match _data {
             None => Ok(vec![]),
@@ -40,11 +40,15 @@ impl Storage for RegistryStorage {
             }
         }
     }
+
+    fn load_value(&mut self, key: &str) -> Result<Self::Target> {
+        todo!()
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::RegistryStorage;
+    use crate::{RegistryStorage, SLED_DB};
     use anyhow::Result;
     use luoshu_core::Connection;
     use luoshu_registry::{Registry, RegistryStore};
@@ -76,8 +80,7 @@ mod test {
 
     #[test]
     fn registry_store_save_test() -> Result<()> {
-        let db: sled::Db = sled::open("test_db_registry1").unwrap();
-        let storage = RegistryStorage::new(db);
+        let storage = RegistryStorage::new(SLED_DB.clone());
         let connector = Connector {};
         let mut store = RegistryStore::new(Box::new(connector), Box::new(storage));
         let mut registry = Registry::new(None, "test_registry".into());
@@ -89,8 +92,7 @@ mod test {
 
     #[test]
     fn registry_store_load_test() -> Result<()> {
-        let db: sled::Db = sled::open("test_db_registry2").unwrap();
-        let storage = RegistryStorage::new(db);
+        let storage = RegistryStorage::new(SLED_DB.clone());
         let connector = Connector {};
         let mut store = RegistryStore::new(Box::new(connector), Box::new(storage));
         store.load()?;

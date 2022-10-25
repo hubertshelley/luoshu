@@ -19,19 +19,20 @@ impl NamespaceStorage {
 }
 
 impl Storage for NamespaceStorage {
-    type Target = Namespace;
+    type Target = Vec<Namespace>;
 
-    fn save(&self, values: Vec<Self::Target>) -> Result<()> {
+    fn save(&self, values: Self::Target) -> Result<()> {
         self.db
             .insert(
                 self.key.as_bytes(),
                 serde_json::to_string(&values).unwrap().as_bytes(),
             )
             .expect("NamespaceStorage save error");
+        self.db.flush()?;
         Ok(())
     }
 
-    fn load(&mut self) -> Result<Vec<Self::Target>> {
+    fn load(&mut self) -> Result<Self::Target> {
         let _data = self.db.get(self.key.as_bytes()).unwrap();
         match _data {
             None => Ok(vec![]),
@@ -41,18 +42,21 @@ impl Storage for NamespaceStorage {
             }
         }
     }
+
+    fn load_value(&mut self, key: &str) -> Result<Self::Target> {
+        todo!()
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::NamespaceStorage;
+    use crate::{NamespaceStorage, SLED_DB};
     use anyhow::Result;
     use luoshu_namespace::{Namespace, NamespaceStore};
 
     #[test]
     fn name_space_store_save_test() -> Result<()> {
-        let db: sled::Db = sled::open("test_db_namespace1").unwrap();
-        let storage = NamespaceStorage::new(db);
+        let storage = NamespaceStorage::new(SLED_DB.clone());
         let mut store = NamespaceStore::new(Box::new(storage));
         store.append_namespace(Namespace::new("test_name_space".into()))?;
         store.save()?;
@@ -61,11 +65,11 @@ mod test {
 
     #[test]
     fn name_space_store_load_test() -> Result<()> {
-        let db: sled::Db = sled::open("test_db_namespace2").unwrap();
+        // let db: sled::Db = sled::open("test_db_namespace2").unwrap();
+        let db = SLED_DB.clone();
         let storage = NamespaceStorage::new(db);
         let mut store = NamespaceStore::new(Box::new(storage));
         store.load()?;
-        println!("{:#?}", store.namespaces);
         Ok(())
     }
 }

@@ -33,7 +33,7 @@ impl Namespace {
 
 /// 命名空间存储
 pub struct NamespaceStore {
-    storage: Box<dyn Storage<Target = Namespace>>,
+    storage: Box<dyn Storage<Target=Vec<Namespace>>>,
     /// 命名空间内容
     pub namespaces: Vec<Namespace>,
 }
@@ -54,7 +54,7 @@ impl DerefMut for NamespaceStore {
 
 impl NamespaceStore {
     /// 创建命名空间存储
-    pub fn new(storage: Box<dyn Storage<Target = Namespace>>) -> Self {
+    pub fn new(storage: Box<dyn Storage<Target=Vec<Namespace>>>) -> Self {
         Self {
             storage,
             namespaces: vec![],
