@@ -11,9 +11,5 @@ name = "luoshu"
 version = "0.1.0"
 
 [[package]]
-name = "luoshu_test"
-version = "0.1.0"
-
-[[package]]
 name = "registry"
 version = "0.1.0"
