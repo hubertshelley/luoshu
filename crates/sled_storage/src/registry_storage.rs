@@ -1,6 +1,6 @@
 use anyhow::Result;
-use core::Storage;
-use registry::Registry;
+use luoshu_core::Storage;
+use luoshu_registry::Registry;
 
 /// 注册中心存储sled实现
 pub struct RegistryStorage {
@@ -44,11 +44,11 @@ impl Storage for RegistryStorage {
 
 #[cfg(test)]
 mod test {
-    use std::net::SocketAddr;
     use crate::RegistryStorage;
     use anyhow::Result;
-    use registry::{Registry, RegistryStore};
-    use core::Connection;
+    use luoshu_core::Connection;
+    use luoshu_registry::{Registry, RegistryStore};
+    use std::net::SocketAddr;
 
     struct Connector {}
 

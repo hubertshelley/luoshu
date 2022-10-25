@@ -1,6 +1,6 @@
 use anyhow::Result;
-use core::Storage;
-use configuration::Configurator;
+use luoshu_configuration::Configurator;
+use luoshu_core::Storage;
 
 /// 配置中心存储sled实现
 pub struct ConfiguratorStorage {
@@ -45,11 +45,11 @@ impl Storage for ConfiguratorStorage {
 
 #[cfg(test)]
 mod test {
-    use std::net::SocketAddr;
     use crate::ConfiguratorStorage;
     use anyhow::Result;
-    use configuration::{Configurator, ConfiguratorStore};
-    use core::Connection;
+    use luoshu_configuration::{Configurator, ConfiguratorStore};
+    use luoshu_core::Connection;
+    use std::net::SocketAddr;
 
     struct Connector {}
 

@@ -1,9 +1,9 @@
 use anyhow::Result;
-use sled_storage::{ConfiguratorStorage, NamespaceStorage, SLED_DB};
-use core::Connection;
+use luoshu_configuration::{Configurator, ConfiguratorStore};
+use luoshu_core::Connection;
+use luoshu_namespace::NamespaceStore;
+use luoshu_sled_storage::{ConfiguratorStorage, NamespaceStorage, SLED_DB};
 use std::net::SocketAddr;
-use configuration::{Configurator, ConfiguratorStore};
-use namespace::{Namespace, NamespaceStore};
 
 struct Connector {}
 

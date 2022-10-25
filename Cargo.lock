@@ -39,26 +39,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "configuration"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "core",
- "serde",
- "serde_json",
- "uuid",
-]
-
-[[package]]
-name = "core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "serde",
- "tokio",
-]
-
-[[package]]
 name = "crc32fast"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -173,6 +153,66 @@ name = "luoshu"
 version = "0.1.0"
 
 [[package]]
+name = "luoshu_client"
+version = "0.1.0"
+
+[[package]]
+name = "luoshu_configuration"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "luoshu_core",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
+name = "luoshu_core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "tokio",
+]
+
+[[package]]
+name = "luoshu_namespace"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "luoshu_core",
+ "serde",
+ "uuid",
+]
+
+[[package]]
+name = "luoshu_registry"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "luoshu_core",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
+name = "luoshu_sled_storage"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "luoshu_configuration",
+ "luoshu_core",
+ "luoshu_namespace",
+ "luoshu_registry",
+ "once_cell",
+ "serde_json",
+ "sled",
+ "tokio",
+]
+
+[[package]]
 name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -197,16 +237,6 @@ dependencies = [
  "log",
  "wasi",
  "windows-sys 0.36.1",
-]
-
-[[package]]
-name = "namespace"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "core",
- "serde",
- "uuid",
 ]
 
 [[package]]
@@ -307,16 +337,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "registry"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "core",
- "serde",
- "uuid",
-]
-
-[[package]]
 name = "ryu"
 version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -385,41 +405,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "sled_storage"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "configuration",
- "core",
- "namespace",
- "once_cell",
- "registry",
- "serde_json",
- "sled",
- "tokio",
-]
-
-[[package]]
 name = "sled_storage_test"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "configuration",
- "core",
- "namespace",
- "registry",
- "sled_storage",
- "tokio",
-]
-
-[[package]]
-name = "sled_storage_test1"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "configuration",
- "core",
- "sled_storage",
+ "luoshu_configuration",
+ "luoshu_core",
+ "luoshu_namespace",
+ "luoshu_registry",
+ "luoshu_sled_storage",
  "tokio",
 ]
 

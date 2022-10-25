@@ -19,8 +19,12 @@ mod tests {
     impl Storage for Store {
         type Target = u8;
 
-        fn save(&self, _: Vec<Self::Target>) -> Result<()> { Ok(()) }
-        fn load(&mut self) -> Result<Vec<Self::Target>> { Ok(vec![]) }
+        fn save(&self, _: Vec<Self::Target>) -> Result<()> {
+            Ok(())
+        }
+        fn load(&mut self) -> Result<Vec<Self::Target>> {
+            Ok(vec![])
+        }
     }
 
     #[test]

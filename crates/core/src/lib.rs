@@ -1,4 +1,4 @@
-//! core traits for luoshu
+//! luoshu_core traits for luoshu
 #![deny(missing_docs)]
 mod connection;
 mod storage;

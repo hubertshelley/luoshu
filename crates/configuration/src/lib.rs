@@ -1,21 +1,20 @@
 //! configurator for luoshu
 #![deny(missing_docs)]
 
-use std::collections::HashMap;
 use anyhow::Result;
+use luoshu_core::{Connection, Storage};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::collections::HashMap;
 use uuid::Uuid;
-use core::{Connection, Storage};
-use serde_json::{Value};
 
 /// 配置中心
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Configurator {
     id: String,
     namespace: String,
-    configuration: HashMap<String, Value>,
+    luoshu_configuration: HashMap<String, Value>,
 }
-
 
 impl Configurator {
     /// 创建配置中心
@@ -25,12 +24,13 @@ impl Configurator {
         Configurator {
             id,
             namespace,
-            configuration: HashMap::new(),
+            luoshu_configuration: HashMap::new(),
         }
     }
     /// 创建配置
     pub fn set_configuration(&mut self, name: String, config: String) -> Result<()> {
-        self.configuration.insert(name, serde_json::from_str(config.as_str())?);
+        self.luoshu_configuration
+            .insert(name, serde_json::from_str(config.as_str())?);
         Ok(())
     }
 }
@@ -38,14 +38,17 @@ impl Configurator {
 /// 配置中心存储
 pub struct ConfiguratorStore {
     connection: Box<dyn Connection>,
-    storage: Box<dyn Storage<Target=Configurator>>,
+    storage: Box<dyn Storage<Target = Configurator>>,
     /// 配置中心列表
     pub configurators: Vec<Configurator>,
 }
 
 impl ConfiguratorStore {
     /// 创建配置中心存储
-    pub fn new(connection: Box<dyn Connection>, storage: Box<dyn Storage<Target=Configurator>>) -> Self {
+    pub fn new(
+        connection: Box<dyn Connection>,
+        storage: Box<dyn Storage<Target = Configurator>>,
+    ) -> Self {
         Self {
             connection,
             storage,

@@ -1,10 +1,40 @@
 [workspace]
-members = [
-    "luoshu",
-    "crates/*",
-    "crates/*/tests/*",
-    "tests/*"
-]
 exclude = [
-    "examples/*",
+  "examples/*",
 ]
+members = [
+  "luoshu",
+  "luoshu_client",
+  "crates/*",
+  "crates/*/tests/*", # "tests/*",
+]
+
+[workspace.package]
+authors = ["Hubert Shelley <hubertshelley@163.com>"]
+categories = ["web-programming::micro-service", "web-programming::api-gateway", "cloud native"]
+description = """
+Luoshu
+"""
+documentation = "https://docs.rs/"
+edition = "2021"
+homepage = ""
+keywords = ["dynamic service discovery", "dynamic service configuration", "dynamic service management"]
+license = "Apache-2.0"
+readme = "./README.md"
+repository = "https://github.com/hubertshelley/luoshu"
+version = "0.1.0"
+
+[workspace.dependencies]
+anyhow = "1.0.66"
+once_cell = "1.15.0"
+serde = "1.0.147"
+serde_json = "1.0.87"
+sled = "0.34.7"
+tokio = "1.21.2"
+uuid = "1.2.1"
+
+luoshu_configuration = {path = "./crates/configuration"}
+luoshu_core = {path = "./crates/core"}
+luoshu_namespace = {path = "./crates/namespace"}
+luoshu_registry = {path = "./crates/registry"}
+luoshu_sled_storage = {path = "./crates/sled_storage"}

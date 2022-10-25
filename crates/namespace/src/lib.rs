@@ -2,7 +2,7 @@
 #![deny(missing_docs)]
 
 use anyhow::Result;
-use core::Storage;
+use luoshu_core::Storage;
 use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 use uuid::Uuid;
@@ -27,16 +27,13 @@ impl Namespace {
     /// 创建命名空间
     pub fn new(name: String) -> Self {
         let id = Uuid::new_v4().to_string();
-        Self {
-            id,
-            name,
-        }
+        Self { id, name }
     }
 }
 
 /// 命名空间存储
 pub struct NamespaceStore {
-    storage: Box<dyn Storage<Target=Namespace>>,
+    storage: Box<dyn Storage<Target = Namespace>>,
     /// 命名空间内容
     pub namespaces: Vec<Namespace>,
 }
@@ -57,7 +54,7 @@ impl DerefMut for NamespaceStore {
 
 impl NamespaceStore {
     /// 创建命名空间存储
-    pub fn new(storage: Box<dyn Storage<Target=Namespace>>) -> Self {
+    pub fn new(storage: Box<dyn Storage<Target = Namespace>>) -> Self {
         Self {
             storage,
             namespaces: vec![],

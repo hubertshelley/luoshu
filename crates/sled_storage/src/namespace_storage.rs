@@ -1,6 +1,6 @@
 use anyhow::Result;
-use core::Storage;
-use namespace::Namespace;
+use luoshu_core::Storage;
+use luoshu_namespace::Namespace;
 
 /// 命名空间存储sled实现
 pub struct NamespaceStorage {
@@ -47,7 +47,7 @@ impl Storage for NamespaceStorage {
 mod test {
     use crate::NamespaceStorage;
     use anyhow::Result;
-    use namespace::{Namespace, NamespaceStore};
+    use luoshu_namespace::{Namespace, NamespaceStore};
 
     #[test]
     fn name_space_store_save_test() -> Result<()> {

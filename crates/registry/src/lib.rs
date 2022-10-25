@@ -4,9 +4,9 @@
 mod service;
 
 use anyhow::Result;
+use luoshu_core::{Connection, Storage};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use core::{Connection, Storage};
 
 /// 服务
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -38,10 +38,7 @@ impl Registry {
     }
     /// 注册服务
     pub fn register_service(&mut self, host: String, port: u32) -> Result<()> {
-        self.services.push(Service {
-            host,
-            port,
-        });
+        self.services.push(Service { host, port });
         Ok(())
     }
 }
@@ -49,14 +46,17 @@ impl Registry {
 /// 注册中心存储
 pub struct RegistryStore {
     connection: Box<dyn Connection>,
-    storage: Box<dyn Storage<Target=Registry>>,
+    storage: Box<dyn Storage<Target = Registry>>,
     /// 注册中心列表
     pub registries: Vec<Registry>,
 }
 
 impl RegistryStore {
     /// 创建注册中心存储
-    pub fn new(connection: Box<dyn Connection>, storage: Box<dyn Storage<Target=Registry>>) -> Self {
+    pub fn new(
+        connection: Box<dyn Connection>,
+        storage: Box<dyn Storage<Target = Registry>>,
+    ) -> Self {
         Self {
             connection,
             storage,
