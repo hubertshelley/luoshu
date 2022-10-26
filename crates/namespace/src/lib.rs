@@ -2,9 +2,8 @@
 #![deny(missing_docs)]
 
 use anyhow::Result;
-use luoshu_core::{Storage, Store};
+use luoshu_core::{Connection, Storage, Store};
 use serde::{Deserialize, Serialize};
-use std::ops::{Deref, DerefMut};
 use uuid::Uuid;
 
 /// 命名空间
@@ -32,27 +31,14 @@ impl Namespace {
 }
 
 /// 命名空间存储
-pub struct NamespaceStore<T: Storage> {
-    storage: T,
+pub struct NamespaceStore<'a, T: Storage> {
+    connection: Box<dyn Connection>,
+    storage: &'a T,
     /// 命名空间内容
     pub values: Vec<Namespace>,
 }
 
-impl<T: Storage> Deref for NamespaceStore<T> {
-    type Target = Vec<Namespace>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.values
-    }
-}
-
-impl<T: Storage> DerefMut for NamespaceStore<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.values
-    }
-}
-
-impl<T: Storage> Store for NamespaceStore<T> {
+impl<'a, T: Storage> Store for NamespaceStore<'a, T> {
     type Target = Namespace;
 
     type Storage = T;
@@ -74,10 +60,11 @@ impl<T: Storage> Store for NamespaceStore<T> {
     }
 }
 
-impl<T: Storage> NamespaceStore<T> {
+impl<'a, T: Storage> NamespaceStore<'a, T> {
     /// 创建命名空间存储
-    pub fn new(storage: T) -> Self {
+    pub fn new(connection: Box<dyn Connection>, storage: &'a T) -> Self {
         Self {
+            connection,
             storage,
             values: vec![],
         }
@@ -89,13 +76,24 @@ impl<T: Storage> NamespaceStore<T> {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use crate::Namespace;
+impl<'a, T: Storage> Connection for NamespaceStore<'a, T> {
+    fn send(&self) {
+        self.connection.send()
+    }
 
-    #[test]
-    fn test_default() {
-        let namespace = Namespace::default();
-        println!("{:#?}", namespace);
+    fn recv(&self) {
+        self.connection.recv()
+    }
+
+    fn connected(&self) {
+        self.connection.connected()
+    }
+
+    fn disconnected(&self) {
+        self.connection.disconnected()
+    }
+
+    fn get_ipaddr(&self) -> std::net::SocketAddr {
+        self.connection.get_ipaddr()
     }
 }
