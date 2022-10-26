@@ -209,10 +209,7 @@ dependencies = [
  "luoshu_namespace",
  "luoshu_registry",
  "once_cell",
- "serde",
- "serde_json",
  "sled",
- "tokio",
 ]
 
 [[package]]
