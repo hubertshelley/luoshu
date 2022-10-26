@@ -173,6 +173,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "serde",
+ "serde_json",
  "tokio",
 ]
 
@@ -183,6 +184,7 @@ dependencies = [
  "anyhow",
  "luoshu_core",
  "serde",
+ "serde_json",
  "uuid",
 ]
 

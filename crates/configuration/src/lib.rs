@@ -2,7 +2,7 @@
 #![deny(missing_docs)]
 
 use anyhow::Result;
-use luoshu_core::{Connection, Storage};
+use luoshu_core::{Connection, Storage, Store};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -36,44 +36,53 @@ impl Configurator {
 }
 
 /// 配置中心存储
-pub struct ConfiguratorStore {
+pub struct ConfiguratorStore<T: Storage> {
     connection: Box<dyn Connection>,
-    storage: Box<dyn Storage<Target=Vec<Configurator>>>,
+    storage: T,
     /// 配置中心列表
-    pub configurators: Vec<Configurator>,
+    pub values: Vec<Configurator>,
 }
 
-impl ConfiguratorStore {
+impl<T: Storage> Store for ConfiguratorStore<T> {
+    type Target = Configurator;
+
+    type Storage = T;
+
+    fn get_storage(&self) -> T {
+        self.storage.clone()
+    }
+
+    fn get_storage_key(&self) -> &str {
+        "ConfiguratorStorage"
+    }
+
+    fn get_values(&self) -> Vec<Self::Target> {
+        self.values.clone()
+    }
+
+    fn set_values(&mut self, values: Vec<Self::Target>) {
+        self.values = values;
+    }
+}
+
+impl<T: Storage> ConfiguratorStore<T> {
     /// 创建配置中心存储
-    pub fn new(
-        connection: Box<dyn Connection>,
-        storage: Box<dyn Storage<Target=Vec<Configurator>>>,
-    ) -> Self {
+    pub fn new(connection: Box<dyn Connection>, storage: T) -> Self {
         Self {
             connection,
             storage,
-            configurators: vec![],
+            // storage_key: "ConfiguratorStorage",
+            values: vec![],
         }
     }
     /// 添加配置中心
     pub fn append_configurator(&mut self, configurator: Configurator) -> Result<()> {
-        self.configurators.push(configurator);
-        Ok(())
-    }
-
-    /// 存储配置中心
-    pub fn save(&mut self) -> Result<()> {
-        self.storage.save(self.configurators.clone())
-    }
-
-    /// 加载配置中心
-    pub fn load(&mut self) -> Result<()> {
-        self.configurators = self.storage.load()?;
+        self.values.push(configurator);
         Ok(())
     }
 }
 
-impl Connection for ConfiguratorStore {
+impl<T: Storage> Connection for ConfiguratorStore<T> {
     fn send(&self) {
         self.connection.send()
     }

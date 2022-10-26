@@ -2,7 +2,7 @@
 #![deny(missing_docs)]
 
 use anyhow::Result;
-use luoshu_core::Storage;
+use luoshu_core::{Storage, Store};
 use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 use uuid::Uuid;
@@ -32,48 +32,59 @@ impl Namespace {
 }
 
 /// 命名空间存储
-pub struct NamespaceStore {
-    storage: Box<dyn Storage<Target=Vec<Namespace>>>,
+pub struct NamespaceStore<T: Storage> {
+    storage: T,
     /// 命名空间内容
-    pub namespaces: Vec<Namespace>,
+    pub values: Vec<Namespace>,
 }
 
-impl Deref for NamespaceStore {
+impl<T: Storage> Deref for NamespaceStore<T> {
     type Target = Vec<Namespace>;
 
     fn deref(&self) -> &Self::Target {
-        &self.namespaces
+        &self.values
     }
 }
 
-impl DerefMut for NamespaceStore {
+impl<T: Storage> DerefMut for NamespaceStore<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.namespaces
+        &mut self.values
     }
 }
 
-impl NamespaceStore {
+impl<T: Storage> Store for NamespaceStore<T> {
+    type Target = Namespace;
+
+    type Storage = T;
+
+    fn get_storage(&self) -> T {
+        self.storage.clone()
+    }
+
+    fn get_storage_key(&self) -> &str {
+        "NamespaceStorage"
+    }
+
+    fn get_values(&self) -> Vec<Self::Target> {
+        self.values.clone()
+    }
+
+    fn set_values(&mut self, values: Vec<Self::Target>) {
+        self.values = values;
+    }
+}
+
+impl<T: Storage> NamespaceStore<T> {
     /// 创建命名空间存储
-    pub fn new(storage: Box<dyn Storage<Target=Vec<Namespace>>>) -> Self {
+    pub fn new(storage: T) -> Self {
         Self {
             storage,
-            namespaces: vec![],
+            values: vec![],
         }
     }
     /// 添加命名空间
     pub fn append_namespace(&mut self, namespace: Namespace) -> Result<()> {
-        self.namespaces.push(namespace);
-        Ok(())
-    }
-
-    /// 存储命名空间
-    pub fn save(&mut self) -> Result<()> {
-        self.storage.save(self.namespaces.clone())
-    }
-
-    /// 加载命名空间
-    pub fn load(&mut self) -> Result<()> {
-        self.namespaces = self.storage.load()?;
+        self.values.push(namespace);
         Ok(())
     }
 }

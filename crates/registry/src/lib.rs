@@ -4,7 +4,7 @@
 mod service;
 
 use anyhow::Result;
-use luoshu_core::{Connection, Storage};
+use luoshu_core::{Connection, Storage, Store};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -44,44 +44,52 @@ impl Registry {
 }
 
 /// 注册中心存储
-pub struct RegistryStore {
+pub struct RegistryStore<T: Storage> {
     connection: Box<dyn Connection>,
-    storage: Box<dyn Storage<Target=Vec<Registry>>>,
+    storage: T,
     /// 注册中心列表
-    pub registries: Vec<Registry>,
+    pub values: Vec<Registry>,
 }
 
-impl RegistryStore {
+impl<T: Storage> Store for RegistryStore<T> {
+    type Target = Registry;
+
+    type Storage = T;
+
+    fn get_storage(&self) -> Self::Storage {
+        self.storage.clone()
+    }
+
+    fn get_storage_key(&self) -> &str {
+        "RegistryStorage"
+    }
+
+    fn get_values(&self) -> Vec<Self::Target> {
+        self.values.clone()
+    }
+
+    fn set_values(&mut self, values: Vec<Self::Target>) {
+        self.values = values;
+    }
+}
+
+impl<T: Storage> RegistryStore<T> {
     /// 创建注册中心存储
-    pub fn new(
-        connection: Box<dyn Connection>,
-        storage: Box<dyn Storage<Target=Vec<Registry>>>,
-    ) -> Self {
+    pub fn new(connection: Box<dyn Connection>, storage: T) -> Self {
         Self {
             connection,
             storage,
-            registries: vec![],
+            values: vec![],
         }
     }
     /// 添加注册中心
     pub fn append_registry(&mut self, registry: Registry) -> Result<()> {
-        self.registries.push(registry);
-        Ok(())
-    }
-
-    /// 存储注册中心
-    pub fn save(&mut self) -> Result<()> {
-        self.storage.save(self.registries.clone())
-    }
-
-    /// 加载注册中心
-    pub fn load(&mut self) -> Result<()> {
-        self.registries = self.storage.load()?;
+        self.values.push(registry);
         Ok(())
     }
 }
 
-impl Connection for RegistryStore {
+impl<T: Storage> Connection for RegistryStore<T> {
     fn send(&self) {
         self.connection.send()
     }

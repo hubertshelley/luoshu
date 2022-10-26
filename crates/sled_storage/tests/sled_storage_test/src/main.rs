@@ -1,8 +1,8 @@
 use anyhow::Result;
 use luoshu_configuration::{Configurator, ConfiguratorStore};
-use luoshu_core::{Connection, Storage};
+use luoshu_core::{Connection, Store};
 use luoshu_namespace::NamespaceStore;
-use luoshu_sled_storage::{ConfiguratorStorage, NamespaceStorage, LuoshuSledStorage, StoreType, SLED_DB};
+use luoshu_sled_storage::LuoshuSledStorage;
 use std::net::SocketAddr;
 
 struct Connector {}
@@ -29,30 +29,20 @@ impl Connection for Connector {
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    // let mut storage = LuoshuSledStorage {};
-    // let mut configurator = Configurator::new(None);
-    // configurator
-    //     .set_configuration("test".into(), "{\"hello\": \"world\"}".to_string())
-    //     .unwrap();
-    // storage.save(vec![configurator].into())?;
-    // let config: StoreType = storage.load_value("Configurator")?;
-    // println!("{:#?}", config);
-    let db = SLED_DB.clone();
-    let storage = ConfiguratorStorage::new(db);
-    let connector = Connector {};
-    let mut store = ConfiguratorStore::new(Box::new(connector), Box::new(storage));
+fn main() -> Result<()> {
+    let storage = LuoshuSledStorage::new("tests");
     let mut configurator = Configurator::new(None);
-    configurator.set_configuration("test".into(), "{\"hello\": \"world\"}".to_string())?;
+    configurator
+        .set_configuration("test".into(), "{\"hello\": \"world\"}".to_string())
+        .unwrap();
+    let connector = Connector {};
+    let mut store = ConfiguratorStore::new(Box::new(connector), storage.clone());
     store.append_configurator(configurator)?;
     store.save()?;
-    println!("{:#?}", store.configurators);
+    println!("{:#?}", store.get_values());
 
-    let db = SLED_DB.clone();
-    let storage = NamespaceStorage::new(db);
-    let mut store = NamespaceStore::new(Box::new(storage));
+    let mut store = NamespaceStore::new(storage);
     store.load()?;
-    println!("{:#?}", store.namespaces);
+    println!("{:#?}", store.get_values());
     Ok(())
 }
