@@ -2,9 +2,9 @@ use anyhow::Result;
 use luoshu_configuration::{Configurator, ConfiguratorStore};
 use luoshu_core::{Connection, Store};
 use luoshu_namespace::{Namespace, NamespaceStore};
+use luoshu_registry::{Registry, RegistryStore};
 use luoshu_sled_storage::LuoshuSledStorage;
 use std::net::SocketAddr;
-use luoshu_registry::{Registry, RegistryStore};
 
 #[derive(Clone)]
 struct Connector {}
@@ -50,9 +50,7 @@ fn main() -> Result<()> {
     println!("{:#?}", configurator_store.get_values());
 
     let mut registry = Registry::new(None, "hello".into());
-    registry
-        .register_service("127.0.0.1".into(), 7890)
-        .unwrap();
+    registry.register_service("127.0.0.1".into(), 7890).unwrap();
     let mut registry_store = RegistryStore::new(Box::new(connector), &storage);
     registry_store.append_registry(registry)?;
     registry_store.save()?;

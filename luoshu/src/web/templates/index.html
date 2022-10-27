@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>转发配置</title>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js">
+    </script>
+    <script src="https://unpkg.com/vue@3"></script>
+</head>
+
+<body>
+    <div id="app">
+        <h1>转发配置</h1>
+        <div id="chat">
+            <p><em>服务列表</em></p>
+        </div>
+        <div>
+            <p v-for="item in servers">
+                {{ item }}
+                <button type="button" @click="delete_service(item)">删除服务</button>
+            </p>
+        </div>
+        <div>
+            服务名称：<input type="text" v-model="subdata.name" />
+            IP地址：<input type="text" v-model="subdata.host" />
+            端口：<input type="number" v-model="subdata.port" />
+            <button type="button" @click="save_service">添加服务</button>
+        </div>
+    </div>
+    <script>
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {
+                    servers: [],
+                    connected: false,
+                    connectedText: 'Connecting...',
+                    ws: null,
+                    message: [],
+                    subdata: {
+                        name: "default",
+                        host: "192.168.110.103",
+                        port: 8000,
+                    }
+                }
+            },
+            mounted() {
+                this.load_services();
+            },
+            methods: {
+                load_services() {
+                    $.get("/service", (data, status) => {
+                        this.servers = data
+                        console.log("Data: " + data + "nStatus: " + status);
+                    });
+                },
+                save_service() {
+                    console.log(this.subdata);
+                    $.ajax({
+                        type: 'post',
+                        url: '/service',
+                        contentType: 'application/json',
+                        data: JSON.stringify(this.subdata),
+                        success: (result, status, xhr) => {
+                            console.log("Data: " + result + "nStatus: " + status);
+                            this.load_services();
+                        },
+                    });
+                },
+                delete_service(item) {
+                    console.log(item);
+                    $.ajax({
+                        type: 'post',
+                        url: '/service/delete',
+                        contentType: 'application/json',
+                        data: JSON.stringify(item),
+                        success: (result, status, xhr) => {
+                            console.log("Data: " + result + "nStatus: " + status);
+                            this.load_services();
+                            alert(result);
+                        },
+                    });
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>
