@@ -743,6 +743,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "luoshu_configuration",
+ "luoshu_connection",
  "luoshu_core",
  "luoshu_namespace",
  "luoshu_registry",
@@ -1232,6 +1233,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "luoshu_configuration",
+ "luoshu_connection",
  "luoshu_core",
  "luoshu_namespace",
  "luoshu_registry",
