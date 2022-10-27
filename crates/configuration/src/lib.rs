@@ -36,14 +36,20 @@ impl Configurator {
 }
 
 /// 配置中心存储
-pub struct ConfiguratorStore<'a, T: Storage> {
-    connection: Box<dyn Connection>,
+pub struct ConfiguratorStore<'a, T, U>
+    where
+        T: Storage,
+        U: Connection {
+    connection: &'a U,
     storage: &'a T,
     /// 配置中心列表
     pub values: Vec<Configurator>,
 }
 
-impl<'a, T: Storage> Store for ConfiguratorStore<'a, T> {
+impl<'a, T, U> Store for ConfiguratorStore<'a, T, U>
+    where
+        T: Storage,
+        U: Connection {
     type Target = Configurator;
 
     type Storage = T;
@@ -65,9 +71,12 @@ impl<'a, T: Storage> Store for ConfiguratorStore<'a, T> {
     }
 }
 
-impl<'a, T: Storage> ConfiguratorStore<'a, T> {
+impl<'a, T, U> ConfiguratorStore<'a, T, U>
+    where
+        T: Storage,
+        U: Connection {
     /// 创建配置中心存储
-    pub fn new(connection: Box<dyn Connection>, storage: &'a T) -> Self {
+    pub fn new(connection: &'a U, storage: &'a T) -> Self {
         Self {
             connection,
             storage,
@@ -81,7 +90,10 @@ impl<'a, T: Storage> ConfiguratorStore<'a, T> {
     }
 }
 
-impl<'a, T: Storage> Connection for ConfiguratorStore<'a, T> {
+impl<'a, T, U> Connection for ConfiguratorStore<'a, T, U>
+    where
+        T: Storage,
+        U: Connection {
     fn send(&self) {
         self.connection.send()
     }

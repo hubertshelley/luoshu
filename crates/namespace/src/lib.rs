@@ -31,14 +31,20 @@ impl Namespace {
 }
 
 /// 命名空间存储
-pub struct NamespaceStore<'a, T: Storage> {
-    connection: Box<dyn Connection>,
+pub struct NamespaceStore<'a, T, U>
+    where
+        T: Storage,
+        U: Connection {
+    connection: &'a U,
     storage: &'a T,
     /// 命名空间内容
     pub values: Vec<Namespace>,
 }
 
-impl<'a, T: Storage> Store for NamespaceStore<'a, T> {
+impl<'a, T, U> Store for NamespaceStore<'a, T, U>
+    where
+        T: Storage,
+        U: Connection {
     type Target = Namespace;
 
     type Storage = T;
@@ -60,9 +66,12 @@ impl<'a, T: Storage> Store for NamespaceStore<'a, T> {
     }
 }
 
-impl<'a, T: Storage> NamespaceStore<'a, T> {
+impl<'a, T, U> NamespaceStore<'a, T, U>
+    where
+        T: Storage,
+        U: Connection {
     /// 创建命名空间存储
-    pub fn new(connection: Box<dyn Connection>, storage: &'a T) -> Self {
+    pub fn new(connection: &'a U, storage: &'a T) -> Self {
         Self {
             connection,
             storage,
@@ -76,7 +85,10 @@ impl<'a, T: Storage> NamespaceStore<'a, T> {
     }
 }
 
-impl<'a, T: Storage> Connection for NamespaceStore<'a, T> {
+impl<'a, T, U> Connection for NamespaceStore<'a, T, U>
+    where
+        T: Storage,
+        U: Connection {
     fn send(&self) {
         self.connection.send()
     }

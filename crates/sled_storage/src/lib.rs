@@ -12,7 +12,8 @@ static SLED_DB: Lazy<sled::Db> = Lazy::new(|| sled::open("registry.db").unwrap()
 /// 洛书数据持久化Sled实现
 #[derive(Debug, Clone)]
 pub struct LuoshuSledStorage {
-    storage: sled::Db,
+    /// 存储对象
+    pub storage: sled::Db,
 }
 
 impl Default for LuoshuSledStorage {

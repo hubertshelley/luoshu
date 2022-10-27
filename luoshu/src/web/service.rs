@@ -1,55 +1,42 @@
 use salvo::{prelude::*, Error};
+use tokio::sync::RwLock;
 
-use luoshu_registry::{Registry, RegistryStore};
+use luoshu_core::Store;
+use luoshu_registry::Registry;
+use crate::web::LuoshuData;
 
 pub fn get_routers() -> Router {
     Router::with_path("service")
         .post(append)
         .get(list)
-        .push(Router::with_path("delete").post(delete))
+    // .push(Router::with_path("delete").post(delete))
 }
 
-#[handler]
-async fn delete(req: &mut Request, res: &mut Response) -> Result<(), Error> {
-    res.set_status_code(StatusCode::OK);
-    res.render("删除成功");
-    Ok(())
-}
+// #[handler]
+// async fn delete(req: &mut Request, res: &mut Response) -> Result<(), Error> {
+//     res.set_status_code(StatusCode::OK);
+//     res.render("删除成功");
+//     Ok(())
+// }
 
 #[handler]
-async fn append(req: &mut Request, res: &mut Response) -> Result<(), Error> {
-    let service = req.parse_body::<Registry>().await?;
-    SERVICEBOOK
-        .write()
-        .await
-        .join_service(
-            service.name.to_string(),
-            GatewayService {
-                host: service.host,
-                port: service.port,
-                name: service.name,
-            },
-        )
-        .unwrap();
-    res.set_status_code(StatusCode::OK);
-    Ok(())
-}
-
-#[handler]
-async fn list(_: &mut Request, res: &mut Response) -> Result<(), Error> {
-    let services = SERVICEBOOK.read().await.clone();
-    let mut out_services: Vec<MyService> = vec![];
-    for (_, v) in services.iter() {
-        for service in v.iter() {
-            let host = service.host.clone();
-            let name = service.name.clone();
-            out_services.push(MyService {
-                host,
-                port: service.port,
-                name,
-            });
-        }
+async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<(), Error> {
+    let value = req.parse_body::<Registry>().await?;
+    let data = depot.obtain::<RwLock<LuoshuData>>().unwrap();
+    match data.write().await.service_store.append_registry(value) {
+        Ok(_) => { res.set_status_code(StatusCode::OK); }
+        Err(_) => { res.set_status_code(StatusCode::BAD_REQUEST); }
     }
-    res.render(Json(out_services));
+    Ok(())
+}
+
+#[handler]
+async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<(), Error> {
+    let data = depot.obtain::<RwLock<LuoshuData>>().unwrap();
+    // match data.write().await.service_store.load() {
+    //     Ok(_) => { res.set_status_code(StatusCode::OK); }
+    //     Err(_) => { res.set_status_code(StatusCode::BAD_REQUEST); }
+    // }
+    res.render(Json(data.write().await.service_store.get_values()));
     Ok(())
 }

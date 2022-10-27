@@ -44,14 +44,20 @@ impl Registry {
 }
 
 /// 注册中心存储
-pub struct RegistryStore<'a, T: Storage> {
-    connection: Box<dyn Connection>,
+pub struct RegistryStore<'a, T, U>
+    where
+        T: Storage,
+        U: Connection {
+    connection: &'a U,
     storage: &'a T,
     /// 注册中心列表
     pub values: Vec<Registry>,
 }
 
-impl<'a, T: Storage> Store for RegistryStore<'a, T> {
+impl<'a, T, U> Store for RegistryStore<'a, T, U>
+    where
+        T: Storage,
+        U: Connection {
     type Target = Registry;
 
     type Storage = T;
@@ -73,9 +79,12 @@ impl<'a, T: Storage> Store for RegistryStore<'a, T> {
     }
 }
 
-impl<'a, T: Storage> RegistryStore<'a, T> {
+impl<'a, T, U> RegistryStore<'a, T, U>
+    where
+        T: Storage,
+        U: Connection {
     /// 创建注册中心存储
-    pub fn new(connection: Box<dyn Connection>, storage: &'a T) -> Self {
+    pub fn new(connection: &'a U, storage: &'a T) -> Self {
         Self {
             connection,
             storage,
@@ -89,7 +98,10 @@ impl<'a, T: Storage> RegistryStore<'a, T> {
     }
 }
 
-impl<'a, T: Storage> Connection for RegistryStore<'a, T> {
+impl<'a, T, U> Connection for RegistryStore<'a, T, U>
+    where
+        T: Storage,
+        U: Connection {
     fn send(&self) {
         self.connection.send()
     }
