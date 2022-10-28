@@ -669,11 +669,13 @@ dependencies = [
  "clap",
  "luoshu_configuration",
  "luoshu_connection",
+ "luoshu_core",
  "luoshu_namespace",
  "luoshu_registry",
  "luoshu_sled_storage",
  "once_cell",
  "salvo",
+ "sled",
  "tokio",
 ]
 
@@ -721,6 +723,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "luoshu_raft"
+version = "0.1.0"
+
+[[package]]
 name = "luoshu_registry"
 version = "0.1.0"
 dependencies = [
@@ -737,6 +743,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "luoshu_configuration",
+ "luoshu_connection",
  "luoshu_core",
  "luoshu_namespace",
  "luoshu_registry",
@@ -1226,6 +1233,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "luoshu_configuration",
+ "luoshu_connection",
  "luoshu_core",
  "luoshu_namespace",
  "luoshu_registry",

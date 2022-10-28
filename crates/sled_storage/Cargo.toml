@@ -17,9 +17,10 @@ anyhow.workspace = true
 once_cell.workspace = true
 sled.workspace = true
 
-luoshu_core = {workspace = true}
+luoshu_core = { workspace = true }
 
 [dev-dependencies]
-luoshu_configuration = {workspace = true}
-luoshu_namespace = {workspace = true}
-luoshu_registry = {workspace = true}
+luoshu_configuration = { workspace = true }
+luoshu_connection = { workspace = true }
+luoshu_namespace = { workspace = true }
+luoshu_registry = { workspace = true }
