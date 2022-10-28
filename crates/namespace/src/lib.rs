@@ -47,7 +47,7 @@ where
     T: Storage,
     U: Connection,
 {
-    type Target = Namespace;
+    type Target = Vec<Namespace>;
 
     type Storage = T;
 
@@ -59,11 +59,11 @@ where
         "NamespaceStorage"
     }
 
-    fn get_values(&self) -> Vec<Self::Target> {
+    fn get_values(&self) -> Self::Target {
         self.values.clone()
     }
 
-    fn set_values(&mut self, values: Vec<Self::Target>) {
+    fn set_values(&mut self, values: Self::Target) {
         self.values = values;
     }
 }

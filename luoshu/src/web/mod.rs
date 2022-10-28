@@ -49,6 +49,9 @@ pub async fn run_server(addr: &str) {
         .push(get_service_routers())
         .push(get_namespace_routers())
         .push(get_configuration_routers());
+
+    tracing::info!("admin listening on: http://{}", addr);
+
     Server::new(TcpListener::bind(addr)).serve(router).await;
 }
 

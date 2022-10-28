@@ -44,7 +44,7 @@ where
     connection: U,
     storage: T,
     /// 配置中心列表
-    pub values: Vec<Configurator>,
+    pub values: HashMap<String, Configurator>,
 }
 
 impl<T, U> Store for ConfiguratorStore<T, U>
@@ -52,7 +52,7 @@ where
     T: Storage,
     U: Connection,
 {
-    type Target = Configurator;
+    type Target = HashMap<String, Configurator>;
 
     type Storage = T;
 
@@ -64,11 +64,11 @@ where
         "ConfiguratorStorage"
     }
 
-    fn get_values(&self) -> Vec<Self::Target> {
+    fn get_values(&self) -> Self::Target {
         self.values.clone()
     }
 
-    fn set_values(&mut self, values: Vec<Self::Target>) {
+    fn set_values(&mut self, values: Self::Target) {
         self.values = values;
     }
 }
@@ -83,12 +83,13 @@ where
         Self {
             connection,
             storage,
-            values: vec![],
+            values: HashMap::new(),
         }
     }
     /// 添加配置中心
     pub fn append_configurator(&mut self, configurator: Configurator) -> Result<()> {
-        self.values.push(configurator);
+        self.values
+            .insert(configurator.namespace.clone(), configurator);
         Ok(())
     }
 }

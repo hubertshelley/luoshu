@@ -2,3 +2,4 @@
 target/
 registry.db/
 *.db/
+test_db*/

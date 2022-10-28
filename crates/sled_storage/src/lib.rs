@@ -85,7 +85,12 @@ mod tests {
         let connector = Connector {};
         let storage = LuoshuSledStorage::default();
         let mut store = ConfiguratorStore::new(connector, storage);
-        store.load().unwrap();
+        match store.load() {
+            Ok(_) => todo!(),
+            Err(e) => {
+                println!("{:#?}", e)
+            }
+        };
         println!("{:#?}", store.get_values());
     }
 }

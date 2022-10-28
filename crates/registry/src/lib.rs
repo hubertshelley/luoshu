@@ -3,6 +3,8 @@
 
 mod service;
 
+use std::collections::HashMap;
+
 use anyhow::Result;
 use luoshu_core::{Connection, Storage, Store};
 use serde::{Deserialize, Serialize};
@@ -18,7 +20,9 @@ struct Service {
 /// 注册中心
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Registry {
+    #[serde(default)]
     id: String,
+    #[serde(default)]
     namespace: String,
     name: String,
     services: Vec<Service>,
@@ -52,7 +56,7 @@ where
     connection: U,
     storage: T,
     /// 注册中心列表
-    pub values: Vec<Registry>,
+    pub values: HashMap<String, Registry>,
 }
 
 impl<T, U> Store for RegistryStore<T, U>
@@ -60,7 +64,7 @@ where
     T: Storage,
     U: Connection,
 {
-    type Target = Registry;
+    type Target = HashMap<String, Registry>;
 
     type Storage = T;
 
@@ -72,11 +76,11 @@ where
         "RegistryStorage"
     }
 
-    fn get_values(&self) -> Vec<Self::Target> {
+    fn get_values(&self) -> Self::Target {
         self.values.clone()
     }
 
-    fn set_values(&mut self, values: Vec<Self::Target>) {
+    fn set_values(&mut self, values: Self::Target) {
         self.values = values;
     }
 }
@@ -91,12 +95,15 @@ where
         Self {
             connection,
             storage,
-            values: vec![],
+            values: HashMap::new(),
         }
     }
     /// 添加注册中心
     pub fn append_registry(&mut self, registry: Registry) -> Result<()> {
-        self.values.push(registry);
+        self.values.insert(
+            format!("{}-{}", registry.namespace, registry.name),
+            registry,
+        );
         Ok(())
     }
 }

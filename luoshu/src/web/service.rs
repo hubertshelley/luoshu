@@ -2,9 +2,10 @@ use std::sync::Arc;
 
 use salvo::{prelude::*, Error};
 use tokio::sync::RwLock;
+use tracing::info;
 
 use crate::web::LuoshuData;
-use luoshu_core::Store;
+
 use luoshu_registry::Registry;
 
 pub fn get_routers() -> Router {
@@ -22,9 +23,11 @@ pub fn get_routers() -> Router {
 #[handler]
 async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<(), Error> {
     let value = req.parse_body::<Registry>().await?;
+    info!("{:#?}", value);
     let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
     match data.write().await.service_store.append_registry(value) {
         Ok(_) => {
+            res.render("ok");
             res.set_status_code(StatusCode::OK);
         }
         Err(_) => {
@@ -37,14 +40,22 @@ async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Res
 #[handler]
 async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<(), Error> {
     let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
-    match data.write().await.service_store.load() {
-        Ok(_) => {
-            res.set_status_code(StatusCode::OK);
-        }
-        Err(_) => {
-            res.set_status_code(StatusCode::BAD_REQUEST);
-        }
-    }
-    res.render(Json(data.write().await.service_store.get_values()));
+    // match data.write().await.service_store.load() {
+    //     Ok(_) => {
+    //         res.set_status_code(StatusCode::OK);
+    //     }
+    //     Err(_) => {
+    //         res.set_status_code(StatusCode::BAD_REQUEST);
+    //     }
+    // }
+    let values: Vec<Registry> = data
+        .write()
+        .await
+        .service_store
+        .values
+        .values()
+        .cloned()
+        .collect();
+    res.render(Json(values));
     Ok(())
 }

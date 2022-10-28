@@ -20,6 +20,9 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
+
+    tracing_subscriber::fmt().init();
+
     run_server(format!("0.0.0.0:{}", args.admin_port).as_str()).await;
     Ok(())
 }
