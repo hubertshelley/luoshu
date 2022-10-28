@@ -53,7 +53,7 @@ mod tests {
     use crate::LuoshuSledStorage;
     use luoshu_configuration::{Configurator, ConfiguratorStore};
     use luoshu_connection::Connector;
-    use luoshu_core::{Store};
+    use luoshu_core::Store;
     use luoshu_registry::{Registry, RegistryStore};
 
     #[test]
@@ -62,7 +62,7 @@ mod tests {
         registry.register_service("127.0.0.1".into(), 8000).unwrap();
         let connector = Connector {};
         let storage = LuoshuSledStorage::new("registry_store_save_test");
-        let mut store = RegistryStore::new(&connector, &storage);
+        let mut store = RegistryStore::new(connector, storage);
         store.append_registry(registry).unwrap();
         store.save().unwrap();
     }
@@ -75,7 +75,7 @@ mod tests {
             .unwrap();
         let connector = Connector {};
         let storage = LuoshuSledStorage::new("configurator_store_save_test");
-        let mut store = ConfiguratorStore::new(&connector, &storage);
+        let mut store = ConfiguratorStore::new(connector, storage);
         store.append_configurator(configurator).unwrap();
         store.save().unwrap();
     }
@@ -84,7 +84,7 @@ mod tests {
     fn configurator_store_load_test() {
         let connector = Connector {};
         let storage = LuoshuSledStorage::default();
-        let mut store = ConfiguratorStore::new(&connector, &storage);
+        let mut store = ConfiguratorStore::new(connector, storage);
         store.load().unwrap();
         println!("{:#?}", store.get_values());
     }

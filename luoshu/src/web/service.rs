@@ -1,14 +1,14 @@
+use std::sync::Arc;
+
 use salvo::{prelude::*, Error};
 use tokio::sync::RwLock;
 
+use crate::web::LuoshuData;
 use luoshu_core::Store;
 use luoshu_registry::Registry;
-use crate::web::LuoshuData;
 
 pub fn get_routers() -> Router {
-    Router::with_path("service")
-        .post(append)
-        .get(list)
+    Router::with_path("service").post(append).get(list)
     // .push(Router::with_path("delete").post(delete))
 }
 
@@ -22,21 +22,29 @@ pub fn get_routers() -> Router {
 #[handler]
 async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<(), Error> {
     let value = req.parse_body::<Registry>().await?;
-    let data = depot.obtain::<RwLock<LuoshuData>>().unwrap();
+    let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
     match data.write().await.service_store.append_registry(value) {
-        Ok(_) => { res.set_status_code(StatusCode::OK); }
-        Err(_) => { res.set_status_code(StatusCode::BAD_REQUEST); }
+        Ok(_) => {
+            res.set_status_code(StatusCode::OK);
+        }
+        Err(_) => {
+            res.set_status_code(StatusCode::BAD_REQUEST);
+        }
     }
     Ok(())
 }
 
 #[handler]
 async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<(), Error> {
-    let data = depot.obtain::<RwLock<LuoshuData>>().unwrap();
-    // match data.write().await.service_store.load() {
-    //     Ok(_) => { res.set_status_code(StatusCode::OK); }
-    //     Err(_) => { res.set_status_code(StatusCode::BAD_REQUEST); }
-    // }
+    let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
+    match data.write().await.service_store.load() {
+        Ok(_) => {
+            res.set_status_code(StatusCode::OK);
+        }
+        Err(_) => {
+            res.set_status_code(StatusCode::BAD_REQUEST);
+        }
+    }
     res.render(Json(data.write().await.service_store.get_values()));
     Ok(())
 }

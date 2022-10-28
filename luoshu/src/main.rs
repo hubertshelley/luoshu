@@ -1,8 +1,8 @@
 use clap::Parser;
 
-// mod web;
+mod web;
 
-// use web::run_server;
+use web::run_server;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -19,7 +19,7 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // let args = Args::parse();
-    // run_server(format!("0.0.0.0:{}", args.admin_port).as_str()).await;
+    let args = Args::parse();
+    run_server(format!("0.0.0.0:{}", args.admin_port).as_str()).await;
     Ok(())
 }
