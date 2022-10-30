@@ -1,16 +1,21 @@
+use std::sync::Arc;
 use clap::Parser;
+use tokio::sync::RwLock;
+use luoshu_core::Store;
 
 mod web;
+mod data;
 
-use web::run_server;
+use crate::data::LuoshuData;
+use crate::web::run_server;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// admin port
-    #[arg(short, long, default_value_t = 19999)]
-    admin_port: u16,
+    /// run with web
+    #[arg(long, default_value_t = false)]
+    web: bool,
 
     /// Number of times to greet
     #[arg(short, long, default_value_t = 1)]
@@ -23,6 +28,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing_subscriber::fmt().init();
 
-    run_server(format!("0.0.0.0:{}", args.admin_port).as_str()).await;
+    let data = Arc::new(RwLock::new(LuoshuData::new()));
+
+    data.write().await.configuration_store.load()?;
+    data.write().await.namespace_store.load()?;
+
+    if args.web {
+        run_server("0.0.0.0:19999", data).await;
+    }
     Ok(())
 }

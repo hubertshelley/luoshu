@@ -19,6 +19,9 @@ salvo = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 sled.workspace = true
 tracing = { workspace = true }
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+thiserror = { workspace = true }
 tracing-subscriber = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 

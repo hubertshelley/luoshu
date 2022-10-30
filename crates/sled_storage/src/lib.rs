@@ -43,7 +43,7 @@ impl Storage for LuoshuSledStorage {
         let data = self.storage.get(key)?;
         match data {
             Some(data) => Ok(data.to_vec()),
-            None => Ok("[]".as_bytes().to_vec()),
+            None => Ok("{}".as_bytes().to_vec()),
         }
     }
 }

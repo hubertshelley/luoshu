@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
-use salvo::{handler, prelude::StatusCode, writer::Json, Depot, Error, Request, Response, Router};
+use salvo::{handler, writer::Json, Depot, Request, Response, Router};
 use serde::Deserialize;
 use tokio::sync::RwLock;
 
-use crate::web::LuoshuData;
-
 use luoshu_registry::{Registry, Service};
+use crate::LuoshuData;
+use crate::web::error::WebResult;
+use crate::web::resp::Resp;
 
 pub fn get_routers() -> Router {
     Router::with_path("service").post(append).get(list)
@@ -14,7 +15,7 @@ pub fn get_routers() -> Router {
 }
 
 // #[handler]
-// async fn delete(req: &mut Request, res: &mut Response) -> Result<(), Error> {
+// async fn delete(req: &mut Request, res: &mut Response) -> WebResult<()> {
 //     res.set_status_code(StatusCode::OK);
 //     res.render("删除成功");
 //     Ok(())
@@ -44,37 +45,17 @@ impl From<ServiceReg> for Registry {
 }
 
 #[handler]
-async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<(), Error> {
+async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
     let value = req.parse_body::<ServiceReg>().await?;
     let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
-    match data
-        .write()
-        .await
-        .service_store
-        .append_registry(value.into())
-    {
-        Ok(_) => {
-            res.render("ok");
-            res.set_status_code(StatusCode::OK);
-        }
-        Err(_) => {
-            res.set_status_code(StatusCode::BAD_REQUEST);
-        }
-    }
+    data.write().await.service_store.append_registry(value.into())?;
+    res.render(Json(Resp::success("ok")));
     Ok(())
 }
 
 #[handler]
-async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<(), Error> {
+async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
     let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
-    // match data.write().await.service_store.load() {
-    //     Ok(_) => {
-    //         res.set_status_code(StatusCode::OK);
-    //     }
-    //     Err(_) => {
-    //         res.set_status_code(StatusCode::BAD_REQUEST);
-    //     }
-    // }
     let values: Vec<Registry> = data
         .write()
         .await
@@ -83,6 +64,6 @@ async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> Result<
         .values()
         .cloned()
         .collect();
-    res.render(Json(values));
+    res.render(Json(Resp::success(values)));
     Ok(())
 }
