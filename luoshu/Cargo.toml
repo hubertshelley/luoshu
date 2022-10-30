@@ -20,6 +20,7 @@ tokio = { workspace = true, features = ["full"] }
 sled.workspace = true
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 
 
 luoshu_configuration = { workspace = true }

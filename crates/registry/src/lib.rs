@@ -1,20 +1,26 @@
 //! registry for luoshu
 #![deny(missing_docs)]
+extern crate chrono;
 
 mod service;
 
 use std::collections::HashMap;
 
 use anyhow::Result;
+use chrono::Local;
 use luoshu_core::{Connection, Storage, Store};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// 服务
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct Service {
-    host: String,
-    port: u32,
+pub struct Service {
+    /// host
+    pub host: String,
+    /// port
+    pub port: u16,
+    #[serde(skip_deserializing)]
+    reg_time: i64,
 }
 
 /// 注册中心
@@ -26,6 +32,17 @@ pub struct Registry {
     namespace: String,
     name: String,
     services: Vec<Service>,
+}
+
+impl Default for Registry {
+    fn default() -> Self {
+        Self {
+            id: Uuid::new_v4().to_string(),
+            namespace: "default".to_string(),
+            name: Default::default(),
+            services: Default::default(),
+        }
+    }
 }
 
 impl Registry {
@@ -41,8 +58,12 @@ impl Registry {
         }
     }
     /// 注册服务
-    pub fn register_service(&mut self, host: String, port: u32) -> Result<()> {
-        self.services.push(Service { host, port });
+    pub fn register_service(&mut self, host: String, port: u16) -> Result<()> {
+        self.services.push(Service {
+            host,
+            port,
+            reg_time: Local::now().timestamp(),
+        });
         Ok(())
     }
 }
