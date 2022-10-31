@@ -4,8 +4,6 @@ extern crate chrono;
 
 mod service;
 
-use std::collections::HashMap;
-
 use anyhow::Result;
 use chrono::Local;
 use luoshu_core::{Connection, Storage, Store};
@@ -22,6 +20,14 @@ pub struct Service {
     #[serde(skip_deserializing)]
     reg_time: i64,
 }
+
+impl PartialEq<Self> for Service {
+    fn eq(&self, other: &Self) -> bool {
+        self.host == other.host && self.port == other.port
+    }
+}
+
+impl Eq for Service {}
 
 /// 注册中心
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -77,7 +83,7 @@ where
     connection: U,
     storage: T,
     /// 注册中心列表
-    pub values: HashMap<String, Registry>,
+    pub values: Vec<Registry>,
 }
 
 impl<T, U> Store for RegistryStore<T, U>
@@ -85,7 +91,7 @@ where
     T: Storage,
     U: Connection,
 {
-    type Target = HashMap<String, Registry>;
+    type Target = Registry;
 
     type Storage = T;
 
@@ -97,11 +103,11 @@ where
         "RegistryStorage"
     }
 
-    fn get_values(&self) -> Self::Target {
+    fn get_values(&self) -> Vec<Self::Target> {
         self.values.clone()
     }
 
-    fn set_values(&mut self, values: Self::Target) {
+    fn set_values(&mut self, values: Vec<Self::Target>) {
         self.values = values;
     }
 }
@@ -116,15 +122,36 @@ where
         Self {
             connection,
             storage,
-            values: HashMap::new(),
+            values: vec![],
         }
     }
     /// 添加注册中心
     pub fn append_registry(&mut self, registry: Registry) -> Result<()> {
-        self.values.insert(
-            format!("{}-{}", registry.namespace, registry.name),
-            registry,
-        );
+        match self
+            .values
+            .iter_mut()
+            .find(|x| x.namespace == registry.namespace && x.name == registry.name)
+        {
+            None => {
+                self.values.push(registry);
+            }
+            Some(value) => {
+                for service in &registry.services {
+                    let mut edit_index = 0;
+                    let mut is_edit = false;
+                    for sub_value in &value.services {
+                        if sub_value == service {
+                            is_edit = true;
+                            break;
+                        }
+                        edit_index += 1;
+                    }
+                    if is_edit {
+                        value.services.get_mut(edit_index).unwrap().reg_time = service.reg_time
+                    }
+                }
+            }
+        };
         Ok(())
     }
 }

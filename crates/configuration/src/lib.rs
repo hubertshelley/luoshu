@@ -13,7 +13,7 @@ use uuid::Uuid;
 pub struct Configurator {
     id: String,
     namespace: String,
-    luoshu_configuration: HashMap<String, Value>,
+    configuration: HashMap<String, Value>,
 }
 
 impl Configurator {
@@ -24,12 +24,12 @@ impl Configurator {
         Configurator {
             id,
             namespace,
-            luoshu_configuration: HashMap::new(),
+            configuration: HashMap::new(),
         }
     }
     /// 创建配置
     pub fn set_configuration(&mut self, name: String, config: String) -> Result<()> {
-        self.luoshu_configuration
+        self.configuration
             .insert(name, serde_json::from_str(config.as_str())?);
         Ok(())
     }
@@ -44,7 +44,7 @@ where
     connection: U,
     storage: T,
     /// 配置中心列表
-    pub values: HashMap<String, Configurator>,
+    pub values: Vec<Configurator>,
 }
 
 impl<T, U> Store for ConfiguratorStore<T, U>
@@ -52,7 +52,7 @@ where
     T: Storage,
     U: Connection,
 {
-    type Target = HashMap<String, Configurator>;
+    type Target = Configurator;
 
     type Storage = T;
 
@@ -64,11 +64,11 @@ where
         "ConfiguratorStorage"
     }
 
-    fn get_values(&self) -> Self::Target {
+    fn get_values(&self) -> Vec<Self::Target> {
         self.values.clone()
     }
 
-    fn set_values(&mut self, values: Self::Target) {
+    fn set_values(&mut self, values: Vec<Self::Target>) {
         self.values = values;
     }
 }
@@ -83,13 +83,25 @@ where
         Self {
             connection,
             storage,
-            values: HashMap::new(),
+            values: vec![],
         }
     }
     /// 添加配置中心
     pub fn append_configurator(&mut self, configurator: Configurator) -> Result<()> {
-        self.values
-            .insert(configurator.namespace.clone(), configurator);
+        match self
+            .values
+            .iter_mut()
+            .find(|x| x.namespace == configurator.namespace)
+        {
+            None => {
+                self.values.push(configurator);
+            }
+            Some(value) => {
+                for (name, config) in configurator.configuration {
+                    value.configuration.insert(name, config);
+                }
+            }
+        };
         Ok(())
     }
 }

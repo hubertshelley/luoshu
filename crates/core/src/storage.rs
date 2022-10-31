@@ -12,9 +12,9 @@ pub trait Store {
     /// 获取存储键名
     fn get_storage_key(&self) -> &str;
     /// 获取存储数据
-    fn get_values(&self) -> Self::Target;
+    fn get_values(&self) -> Vec<Self::Target>;
     /// 获取存储数据
-    fn set_values(&mut self, values: Self::Target);
+    fn set_values(&mut self, values: Vec<Self::Target>);
     /// 保存数据
     fn save(&self) -> Result<()> {
         self.get_storage().save(
@@ -30,6 +30,7 @@ pub trait Store {
         Ok(())
     }
 }
+
 /// 存储trait
 pub trait Storage: Clone + Send + Sync {
     /// 保存数据

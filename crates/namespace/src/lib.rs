@@ -4,7 +4,6 @@
 use anyhow::Result;
 use luoshu_core::{get_default_uuid4, Connection, Storage, Store};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use uuid::Uuid;
 
 /// 命名空间
@@ -42,7 +41,7 @@ where
     connection: U,
     storage: T,
     /// 命名空间内容
-    pub values: HashMap<String, Namespace>,
+    pub values: Vec<Namespace>,
 }
 
 impl<T, U> Store for NamespaceStore<T, U>
@@ -50,7 +49,7 @@ where
     T: Storage,
     U: Connection,
 {
-    type Target = HashMap<String, Namespace>;
+    type Target = Namespace;
 
     type Storage = T;
 
@@ -62,11 +61,11 @@ where
         "NamespaceStorage"
     }
 
-    fn get_values(&self) -> Self::Target {
+    fn get_values(&self) -> Vec<Self::Target> {
         self.values.clone()
     }
 
-    fn set_values(&mut self, values: Self::Target) {
+    fn set_values(&mut self, values: Vec<Self::Target>) {
         self.values = values;
     }
 }
@@ -81,19 +80,13 @@ where
         Self {
             connection,
             storage,
-            values: HashMap::new(),
+            values: vec![],
         }
     }
     /// 添加命名空间
     pub fn append_namespace(&mut self, namespace: Namespace) -> Result<()> {
-        if !self
-            .values
-            .values()
-            .cloned()
-            .map(|x| x.name)
-            .any(|x| x == namespace.name)
-        {
-            self.values.insert(namespace.id.clone(), namespace);
+        if !self.values.clone().iter().any(|x| x.name == namespace.name) {
+            self.values.push(namespace);
         }
         Ok(())
     }

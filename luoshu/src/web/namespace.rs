@@ -32,15 +32,8 @@ async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Web
 #[handler]
 async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
     let data = depot.obtain::<LuoshuData>().unwrap();
-    let values: Vec<String> = data
-        .namespace_store
-        .write()
-        .await
-        .values
-        .values()
-        .cloned()
-        .map(|x| x.name)
-        .collect();
-    res.render(Json(Resp::success(values)));
+    res.render(Json(Resp::success(
+        data.namespace_store.write().await.get_values(),
+    )));
     Ok(())
 }

@@ -1,10 +1,10 @@
+use luoshu_core::Store;
 use salvo::{handler, writer::Json, Depot, Request, Response, Router};
-use serde::Deserialize;
 
+use crate::data::ServiceReg;
 use crate::web::error::WebResult;
 use crate::web::resp::Resp;
 use crate::LuoshuData;
-use luoshu_registry::{Registry, Service};
 
 pub fn get_routers() -> Router {
     Router::with_path("service").post(append).get(list)
@@ -17,29 +17,6 @@ pub fn get_routers() -> Router {
 //     res.render("删除成功");
 //     Ok(())
 // }
-
-#[derive(Deserialize)]
-struct ServiceReg {
-    #[serde(default = "default_namespace")]
-    namespace: String,
-    name: String,
-    #[serde(flatten)]
-    service: Service,
-}
-
-fn default_namespace() -> String {
-    "default".to_string()
-}
-
-impl From<ServiceReg> for Registry {
-    fn from(service_reg: ServiceReg) -> Self {
-        let mut registry = Registry::new(Some(service_reg.namespace), service_reg.name);
-        registry
-            .register_service(service_reg.service.host, service_reg.service.port)
-            .unwrap();
-        registry
-    }
-}
 
 #[handler]
 async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
@@ -56,14 +33,8 @@ async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Web
 #[handler]
 async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
     let data = depot.obtain::<LuoshuData>().unwrap();
-    let values: Vec<Registry> = data
-        .service_store
-        .write()
-        .await
-        .values
-        .values()
-        .cloned()
-        .collect();
-    res.render(Json(Resp::success(values)));
+    res.render(Json(Resp::success(
+        data.service_store.write().await.get_values(),
+    )));
     Ok(())
 }
