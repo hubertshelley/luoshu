@@ -1,8 +1,10 @@
-use serde::{Serialize};
+use serde::Serialize;
 
 #[derive(Serialize)]
 pub(crate) struct Resp<T>
-    where T: Serialize {
+where
+    T: Serialize,
+{
     is_success: bool,
     code: u8,
     data: Option<T>,
@@ -10,7 +12,9 @@ pub(crate) struct Resp<T>
 }
 
 impl<T> Default for Resp<T>
-    where T: Serialize {
+where
+    T: Serialize,
+{
     fn default() -> Self {
         Self {
             is_success: true,
@@ -22,7 +26,7 @@ impl<T> Default for Resp<T>
 }
 
 pub(crate) enum ErrorArgs {
-    Arg(String, u8)
+    Arg(String, u8),
 }
 
 impl From<String> for ErrorArgs {
@@ -38,7 +42,9 @@ impl From<(String, u8)> for ErrorArgs {
 }
 
 impl<T> Resp<T>
-    where T: Serialize {
+where
+    T: Serialize,
+{
     pub fn success(data: T) -> Self {
         Self {
             data: Some(data),
@@ -46,7 +52,9 @@ impl<T> Resp<T>
         }
     }
     pub fn error(args: ErrorArgs) -> Self {
-        let (message, code) = match args { ErrorArgs::Arg(message, code) => { (message, code) } };
+        let (message, code) = match args {
+            ErrorArgs::Arg(message, code) => (message, code),
+        };
         Self {
             is_success: false,
             code,

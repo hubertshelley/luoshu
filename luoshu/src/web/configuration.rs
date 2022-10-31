@@ -1,13 +1,12 @@
 use std::sync::Arc;
 
 use luoshu_configuration::Configurator;
-use salvo::{prelude::*};
+use salvo::prelude::*;
 use tokio::sync::RwLock;
 
-
-use crate::LuoshuData;
 use crate::web::error::WebResult;
 use crate::web::resp::Resp;
+use crate::LuoshuData;
 
 // use crate::web::LUOSHU_DATA;
 
@@ -27,7 +26,10 @@ pub fn get_routers() -> Router {
 async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
     let value = req.parse_body::<Configurator>().await?;
     let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
-    data.write().await.configuration_store.append_configurator(value)?;
+    data.write()
+        .await
+        .configuration_store
+        .append_configurator(value)?;
     res.render(Json(Resp::success("ok")));
     Ok(())
 }

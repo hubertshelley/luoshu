@@ -3,17 +3,15 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 mod configuration;
-mod namespace;
-mod service;
 mod error;
+mod namespace;
 mod resp;
+mod service;
 
-
+use crate::LuoshuData;
 use configuration::get_routers as get_configuration_routers;
 use namespace::get_routers as get_namespace_routers;
 use service::get_routers as get_service_routers;
-use crate::LuoshuData;
-
 
 pub(crate) async fn run_server(addr: &str, data: Arc<RwLock<LuoshuData>>) {
     let set_store = SetStore(data);

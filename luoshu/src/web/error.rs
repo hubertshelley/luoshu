@@ -1,7 +1,7 @@
-use salvo::{Depot, Request, Response, Writer};
-use salvo::prelude::Json;
-use thiserror::Error;
 use async_trait::async_trait;
+use salvo::prelude::Json;
+use salvo::{Depot, Request, Response, Writer};
+use thiserror::Error;
 
 use crate::web::resp::Resp;
 

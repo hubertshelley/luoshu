@@ -4,10 +4,10 @@ use salvo::{handler, writer::Json, Depot, Request, Response, Router};
 use serde::Deserialize;
 use tokio::sync::RwLock;
 
-use luoshu_registry::{Registry, Service};
-use crate::LuoshuData;
 use crate::web::error::WebResult;
 use crate::web::resp::Resp;
+use crate::LuoshuData;
+use luoshu_registry::{Registry, Service};
 
 pub fn get_routers() -> Router {
     Router::with_path("service").post(append).get(list)
@@ -48,7 +48,10 @@ impl From<ServiceReg> for Registry {
 async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
     let value = req.parse_body::<ServiceReg>().await?;
     let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
-    data.write().await.service_store.append_registry(value.into())?;
+    data.write()
+        .await
+        .service_store
+        .append_registry(value.into())?;
     res.render(Json(Resp::success("ok")));
     Ok(())
 }

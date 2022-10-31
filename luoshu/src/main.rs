@@ -1,10 +1,10 @@
-use std::sync::Arc;
 use clap::Parser;
-use tokio::sync::RwLock;
 use luoshu_core::Store;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
-mod web;
 mod data;
+mod web;
 
 use crate::data::LuoshuData;
 use crate::web::run_server;

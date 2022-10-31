@@ -1,10 +1,10 @@
 //! registry for luoshu
 #![deny(missing_docs)]
 
-use std::collections::HashMap;
 use anyhow::Result;
-use luoshu_core::{Connection, Storage, Store, get_default_uuid4};
+use luoshu_core::{get_default_uuid4, Connection, Storage, Store};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use uuid::Uuid;
 
 /// 命名空间
@@ -35,9 +35,9 @@ impl Namespace {
 
 /// 命名空间存储
 pub struct NamespaceStore<T, U>
-    where
-        T: Storage,
-        U: Connection,
+where
+    T: Storage,
+    U: Connection,
 {
     connection: U,
     storage: T,
@@ -46,9 +46,9 @@ pub struct NamespaceStore<T, U>
 }
 
 impl<T, U> Store for NamespaceStore<T, U>
-    where
-        T: Storage,
-        U: Connection,
+where
+    T: Storage,
+    U: Connection,
 {
     type Target = HashMap<String, Namespace>;
 
@@ -72,9 +72,9 @@ impl<T, U> Store for NamespaceStore<T, U>
 }
 
 impl<T, U> NamespaceStore<T, U>
-    where
-        T: Storage,
-        U: Connection,
+where
+    T: Storage,
+    U: Connection,
 {
     /// 创建命名空间存储
     pub fn new(connection: U, storage: T) -> Self {
@@ -86,15 +86,23 @@ impl<T, U> NamespaceStore<T, U>
     }
     /// 添加命名空间
     pub fn append_namespace(&mut self, namespace: Namespace) -> Result<()> {
-        self.values.insert(namespace.id.clone(), namespace);
+        if !self
+            .values
+            .values()
+            .cloned()
+            .map(|x| x.name)
+            .any(|x| x == namespace.name)
+        {
+            self.values.insert(namespace.id.clone(), namespace);
+        }
         Ok(())
     }
 }
 
 impl<T, U> Connection for NamespaceStore<T, U>
-    where
-        T: Storage,
-        U: Connection,
+where
+    T: Storage,
+    U: Connection,
 {
     fn send(&self) {
         self.connection.send()

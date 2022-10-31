@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
-use salvo::{prelude::*};
+use salvo::prelude::*;
 use tokio::sync::RwLock;
 
 use luoshu_core::Store;
 use luoshu_namespace::Namespace;
 
-use crate::LuoshuData;
 use crate::web::error::WebResult;
 use crate::web::resp::Resp;
+use crate::LuoshuData;
 // use crate::web::LUOSHU_DATA;
 
 pub fn get_routers() -> Router {
@@ -43,7 +43,8 @@ async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResu
         .values
         .values()
         .cloned()
-        .map(|x| x.name).collect();
+        .map(|x| x.name)
+        .collect();
     res.render(Json(Resp::success(values)));
     Ok(())
 }
