@@ -1,8 +1,5 @@
-use std::sync::Arc;
-
 use salvo::{handler, writer::Json, Depot, Request, Response, Router};
 use serde::Deserialize;
-use tokio::sync::RwLock;
 
 use crate::web::error::WebResult;
 use crate::web::resp::Resp;
@@ -47,10 +44,10 @@ impl From<ServiceReg> for Registry {
 #[handler]
 async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
     let value = req.parse_body::<ServiceReg>().await?;
-    let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
-    data.write()
+    let data = depot.obtain::<LuoshuData>().unwrap();
+    data.service_store
+        .write()
         .await
-        .service_store
         .append_registry(value.into())?;
     res.render(Json(Resp::success("ok")));
     Ok(())
@@ -58,11 +55,11 @@ async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Web
 
 #[handler]
 async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
-    let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
+    let data = depot.obtain::<LuoshuData>().unwrap();
     let values: Vec<Registry> = data
+        .service_store
         .write()
         .await
-        .service_store
         .values
         .values()
         .cloned()

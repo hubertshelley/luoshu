@@ -1,10 +1,6 @@
-use std::sync::Arc;
-
-use salvo::prelude::*;
-use tokio::sync::RwLock;
-
 use luoshu_core::Store;
 use luoshu_namespace::Namespace;
+use salvo::{handler, writer::Json, Depot, Request, Response, Router};
 
 use crate::web::error::WebResult;
 use crate::web::resp::Resp;
@@ -26,20 +22,20 @@ pub fn get_routers() -> Router {
 #[handler]
 async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
     let value = req.parse_body::<Namespace>().await?;
-    let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
-    data.write().await.namespace_store.append_namespace(value)?;
+    let data = depot.obtain::<LuoshuData>().unwrap();
+    data.namespace_store.write().await.append_namespace(value)?;
     res.render(Json(Resp::success("ok")));
-    data.write().await.namespace_store.save()?;
+    data.namespace_store.write().await.save()?;
     Ok(())
 }
 
 #[handler]
 async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
-    let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
+    let data = depot.obtain::<LuoshuData>().unwrap();
     let values: Vec<String> = data
+        .namespace_store
         .write()
         .await
-        .namespace_store
         .values
         .values()
         .cloned()

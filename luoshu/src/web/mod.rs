@@ -1,19 +1,19 @@
-use salvo::prelude::*;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-
 mod configuration;
 mod error;
 mod namespace;
 mod resp;
 mod service;
 
+use async_trait::async_trait;
+use salvo::prelude::{TcpListener, Text};
+use salvo::{handler, Depot, FlowCtrl, Handler, Request, Response, Router, Server};
+
 use crate::LuoshuData;
 use configuration::get_routers as get_configuration_routers;
 use namespace::get_routers as get_namespace_routers;
 use service::get_routers as get_service_routers;
 
-pub(crate) async fn run_server(addr: &str, data: Arc<RwLock<LuoshuData>>) {
+pub(crate) async fn run_server(addr: &str, data: LuoshuData) {
     let set_store = SetStore(data);
 
     let router = Router::with_hoop(set_store)
@@ -27,7 +27,7 @@ pub(crate) async fn run_server(addr: &str, data: Arc<RwLock<LuoshuData>>) {
     Server::new(TcpListener::bind(addr)).serve(router).await;
 }
 
-struct SetStore(Arc<RwLock<LuoshuData>>);
+struct SetStore(LuoshuData);
 
 #[async_trait]
 impl Handler for SetStore {

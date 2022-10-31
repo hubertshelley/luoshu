@@ -1,7 +1,5 @@
 use clap::Parser;
 use luoshu_core::Store;
-use std::sync::Arc;
-use tokio::sync::RwLock;
 
 mod data;
 mod web;
@@ -28,10 +26,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing_subscriber::fmt().init();
 
-    let data = Arc::new(RwLock::new(LuoshuData::new()));
+    let data = LuoshuData::new();
 
-    data.write().await.configuration_store.load()?;
-    data.write().await.namespace_store.load()?;
+    data.configuration_store.write().await.load()?;
+    data.namespace_store.write().await.load()?;
 
     if args.web {
         run_server("0.0.0.0:19999", data).await;

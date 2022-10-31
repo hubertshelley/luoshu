@@ -1,8 +1,5 @@
-use std::sync::Arc;
-
 use luoshu_configuration::Configurator;
-use salvo::prelude::*;
-use tokio::sync::RwLock;
+use salvo::{handler, writer::Json, Depot, Request, Response, Router};
 
 use crate::web::error::WebResult;
 use crate::web::resp::Resp;
@@ -25,10 +22,10 @@ pub fn get_routers() -> Router {
 #[handler]
 async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
     let value = req.parse_body::<Configurator>().await?;
-    let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
-    data.write()
+    let data = depot.obtain::<LuoshuData>().unwrap();
+    data.configuration_store
+        .write()
         .await
-        .configuration_store
         .append_configurator(value)?;
     res.render(Json(Resp::success("ok")));
     Ok(())
@@ -36,11 +33,11 @@ async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Web
 
 #[handler]
 async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
-    let data = depot.obtain::<Arc<RwLock<LuoshuData>>>().unwrap();
+    let data = depot.obtain::<LuoshuData>().unwrap();
     let values: Vec<Configurator> = data
+        .configuration_store
         .write()
         .await
-        .configuration_store
         .values
         .values()
         .cloned()
