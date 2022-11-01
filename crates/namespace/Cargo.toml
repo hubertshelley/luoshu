@@ -5,7 +5,7 @@ edition.workspace = true
 homepage.workspace = true
 keywords.workspace = true
 license.workspace = true
-name = "luoshu_registry"
+name = "luoshu_namespace"
 readme.workspace = true
 repository.workspace = true
 version.workspace = true
@@ -17,6 +17,5 @@ anyhow.workspace = true
 serde = {workspace = true, features = ["derive"]}
 serde_json.workspace = true
 uuid = {workspace = true, features = ["v4"]}
-chrono = {workspace = true}
 
 luoshu_core = {workspace = true}

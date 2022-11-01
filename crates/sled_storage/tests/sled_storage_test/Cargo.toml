@@ -1,0 +1,17 @@
+[package]
+edition = "2021"
+name = "sled_storage_test"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow.workspace = true
+tokio = { workspace = true, features = ["full"] }
+
+luoshu_configuration = { workspace = true }
+luoshu_core = { workspace = true }
+luoshu_connection = { workspace = true }
+luoshu_namespace = { workspace = true }
+luoshu_registry = { workspace = true }
+luoshu_sled_storage = { workspace = true }

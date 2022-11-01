@@ -5,7 +5,7 @@ edition.workspace = true
 homepage.workspace = true
 keywords.workspace = true
 license.workspace = true
-name = "luoshu_registry"
+name = "luoshu_sled_storage"
 readme.workspace = true
 repository.workspace = true
 version.workspace = true
@@ -14,9 +14,13 @@ version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-serde = {workspace = true, features = ["derive"]}
-serde_json.workspace = true
-uuid = {workspace = true, features = ["v4"]}
-chrono = {workspace = true}
+once_cell.workspace = true
+sled.workspace = true
 
-luoshu_core = {workspace = true}
+luoshu_core = { workspace = true }
+
+[dev-dependencies]
+luoshu_configuration = { workspace = true }
+luoshu_connection = { workspace = true }
+luoshu_namespace = { workspace = true }
+luoshu_registry = { workspace = true }

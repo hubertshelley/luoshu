@@ -1,6 +1,0 @@
-[workspace]
-members = [
-    "luoshu",
-    "crates/*",
-    "examples/*",
-]
