@@ -71,7 +71,7 @@ mod tests {
     fn configurator_store_save_test() {
         let mut configurator = Configurator::new(None);
         configurator
-            .set_configuration("test".into(), "{\"hello\": \"world\"}".to_string())
+            .set_configuration("test".into(), "{\"hello\": \"world\"}".into())
             .unwrap();
         let connector = Connector {};
         let storage = LuoshuSledStorage::new("configurator_store_save_test");
@@ -86,7 +86,7 @@ mod tests {
         let storage = LuoshuSledStorage::default();
         let mut store = ConfiguratorStore::new(connector, storage);
         match store.load() {
-            Ok(_) => todo!(),
+            Ok(_) => println!("Ok"),
             Err(e) => {
                 println!("{:#?}", e)
             }

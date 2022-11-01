@@ -822,6 +822,7 @@ dependencies = [
  "once_cell",
  "salvo",
  "serde",
+ "serde_json",
  "sled",
  "thiserror",
  "tokio",

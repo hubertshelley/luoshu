@@ -1,5 +1,6 @@
 use clap::Parser;
 use luoshu_core::Store;
+use luoshu_namespace::Namespace;
 
 mod data;
 mod web;
@@ -30,6 +31,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     data.configuration_store.write().await.load()?;
     data.namespace_store.write().await.load()?;
+    if data.namespace_store.read().await.values.is_empty() {
+        data.namespace_store
+            .write()
+            .await
+            .append_namespace(Namespace::new("default".into()))?;
+        data.namespace_store.write().await.save()?;
+    }
 
     if args.web {
         run_server("0.0.0.0:19999", data).await;

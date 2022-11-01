@@ -18,7 +18,7 @@ fn main() -> Result<()> {
 
     let mut configurator = Configurator::new(None);
     configurator
-        .set_configuration("test".into(), "{\"hello\": \"world\"}".to_string())
+        .set_configuration("test".into(), "{\"hello\": \"world\"}".into())
         .unwrap();
     let mut configurator_store = ConfiguratorStore::new(connector.clone(), storage.clone());
     configurator_store.append_configurator(configurator)?;

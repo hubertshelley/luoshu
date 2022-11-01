@@ -1,10 +1,11 @@
-use luoshu_configuration::ConfiguratorStore;
+use luoshu_configuration::{Configurator, ConfiguratorStore};
 use luoshu_connection::Connector;
 use luoshu_core::default_namespace;
 use luoshu_namespace::NamespaceStore;
 use luoshu_registry::{Registry, RegistryStore, Service};
 use luoshu_sled_storage::LuoshuSledStorage;
 use serde::Deserialize;
+use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -24,6 +25,24 @@ impl From<ServiceReg> for Registry {
             .register_service(service_reg.service.host, service_reg.service.port)
             .unwrap();
         registry
+    }
+}
+
+#[derive(Deserialize)]
+pub(crate) struct ConfigurationReg {
+    #[serde(default = "default_namespace")]
+    namespace: String,
+    name: String,
+    config: Value,
+}
+
+impl From<ConfigurationReg> for Configurator {
+    fn from(configuration_reg: ConfigurationReg) -> Self {
+        let mut configuration = Configurator::new(Some(configuration_reg.namespace));
+        configuration
+            .set_configuration(configuration_reg.name, configuration_reg.config)
+            .unwrap();
+        configuration
     }
 }
 

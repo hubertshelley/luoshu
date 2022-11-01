@@ -28,9 +28,8 @@ impl Configurator {
         }
     }
     /// 创建配置
-    pub fn set_configuration(&mut self, name: String, config: String) -> Result<()> {
-        self.configuration
-            .insert(name, serde_json::from_str(config.as_str())?);
+    pub fn set_configuration(&mut self, name: String, config: Value) -> Result<()> {
+        self.configuration.insert(name, config);
         Ok(())
     }
 }
