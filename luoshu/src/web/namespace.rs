@@ -1,7 +1,7 @@
 use luoshu_core::Store;
-use luoshu_namespace::Namespace;
 use salvo::{handler, writer::Json, Depot, Request, Response, Router};
 
+use crate::data::NamespaceReg;
 use crate::web::error::WebResult;
 use crate::web::resp::Resp;
 use crate::LuoshuData;
@@ -21,9 +21,9 @@ pub fn get_routers() -> Router {
 
 #[handler]
 async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
-    let value = req.parse_body::<Namespace>().await?;
+    let value = req.parse_body::<NamespaceReg>().await?;
     let data = depot.obtain::<LuoshuData>().unwrap();
-    data.namespace_store.write().await.append_namespace(value)?;
+    data.append(&value.into()).await?;
     res.render(Json(Resp::success("ok")));
     data.namespace_store.write().await.save()?;
     Ok(())
