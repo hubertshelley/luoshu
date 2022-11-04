@@ -24,9 +24,12 @@ pub trait Store {
     }
     /// 加载数据
     fn load(&mut self) -> Result<()> {
-        let data =
-            serde_json::from_slice(self.get_storage().load(self.get_storage_key())?.as_slice())?;
-        self.set_values(data);
+        match self.get_storage().load(self.get_storage_key()) {
+            Some(data) => {
+                self.set_values(serde_json::from_slice(data.as_slice())?);
+            }
+            None => self.set_values(vec![]),
+        };
         Ok(())
     }
 }
@@ -36,7 +39,7 @@ pub trait Storage: Clone + Send + Sync {
     /// 保存数据
     fn save(&self, key: &str, values: &[u8]) -> Result<()>;
     /// 加载数据
-    fn load(&mut self, key: &str) -> Result<Vec<u8>>;
+    fn load(&mut self, key: &str) -> Option<Vec<u8>>;
 }
 
 #[cfg(test)]
@@ -50,8 +53,8 @@ mod tests {
         fn save(&self, _key: &str, _: &[u8]) -> Result<()> {
             Ok(())
         }
-        fn load(&mut self, _key: &str) -> Result<Vec<u8>> {
-            Ok(vec![])
+        fn load(&mut self, _key: &str) -> Option<Vec<u8>> {
+            None
         }
     }
 

@@ -39,11 +39,10 @@ impl Storage for LuoshuSledStorage {
         self.storage.flush()?;
         Ok(())
     }
-    fn load(&mut self, key: &str) -> anyhow::Result<Vec<u8>> {
-        let data = self.storage.get(key)?;
-        match data {
-            Some(data) => Ok(data.to_vec()),
-            None => Ok("[]".as_bytes().to_vec()),
+    fn load(&mut self, key: &str) -> Option<Vec<u8>> {
+        match self.storage.get(key) {
+            Ok(Some(data)) => Some(data.to_vec()),
+            _ => None,
         }
     }
 }
