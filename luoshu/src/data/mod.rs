@@ -4,14 +4,14 @@ use luoshu_core::default_namespace;
 use luoshu_namespace::{Namespace, NamespaceStore};
 use luoshu_registry::{Registry, RegistryStore, Service};
 use luoshu_sled_storage::LuoshuSledStorage;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::sync::Arc;
+use std::{io::Cursor, sync::Arc};
 use tokio::sync::RwLock;
 
 use anyhow::Result;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub(crate) struct ServiceReg {
     #[serde(default = "default_namespace")]
     namespace: String,
@@ -33,7 +33,7 @@ impl From<&ServiceReg> for Registry {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub(crate) struct ConfigurationReg {
     #[serde(default = "default_namespace")]
     namespace: String,
@@ -54,7 +54,7 @@ impl From<&ConfigurationReg> for Configurator {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub(crate) struct NamespaceReg {
     name: String,
 }
@@ -93,6 +93,37 @@ impl LuoshuData {
     }
 }
 
+#[allow(dead_code)]
+#[derive(Serialize)]
+pub(crate) enum ActionEnum {
+    Up,
+    Down,
+    Sync,
+}
+
+#[derive(Serialize)]
+pub(crate) struct Frame {
+    action: ActionEnum,
+    data: LuoshuDataEnum,
+}
+
+#[allow(dead_code)]
+impl Frame {
+    pub fn parse(_src: &mut Cursor<&[u8]>) -> Result<Frame> {
+        Ok(Frame {
+            action: ActionEnum::Up,
+            data: NamespaceReg {
+                name: "test".to_string(),
+            }
+            .into(),
+        })
+    }
+    pub fn check(_src: &mut Cursor<&[u8]>) -> Result<()> {
+        Ok(())
+    }
+}
+
+#[derive(Serialize)]
 pub(crate) enum LuoshuDataEnum {
     Namespace(NamespaceReg),
     Configuration(ConfigurationReg),
