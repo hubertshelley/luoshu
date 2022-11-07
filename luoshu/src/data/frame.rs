@@ -6,15 +6,15 @@ use serde::{Deserialize, Serialize};
 use super::LuoshuDataEnum;
 
 #[allow(dead_code)]
-#[derive(Serialize, Deserialize)]
-pub(crate) enum ActionEnum {
+#[derive(Clone, Serialize, Deserialize)]
+pub enum ActionEnum {
     Up,
     Down,
     Sync,
 }
 
-#[derive(Serialize, Deserialize)]
-pub(crate) struct Frame {
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Frame {
     pub action: ActionEnum,
     pub data: LuoshuDataEnum,
 }

@@ -10,8 +10,8 @@ use tokio::sync::RwLock;
 
 use anyhow::Result;
 
-#[derive(Deserialize, Serialize)]
-pub(crate) struct ServiceReg {
+#[derive(Clone, Deserialize, Serialize)]
+pub struct ServiceReg {
     #[serde(default = "default_namespace")]
     namespace: String,
     name: String,
@@ -32,8 +32,8 @@ impl From<&ServiceReg> for Registry {
     }
 }
 
-#[derive(Deserialize, Serialize)]
-pub(crate) struct ConfigurationReg {
+#[derive(Clone, Deserialize, Serialize)]
+pub struct ConfigurationReg {
     #[serde(default = "default_namespace")]
     namespace: String,
     name: String,
@@ -53,8 +53,8 @@ impl From<&ConfigurationReg> for Configurator {
     }
 }
 
-#[derive(Deserialize, Serialize)]
-pub(crate) struct NamespaceReg {
+#[derive(Clone, Deserialize, Serialize)]
+pub struct NamespaceReg {
     pub name: String,
 }
 
@@ -65,10 +65,10 @@ impl From<&NamespaceReg> for Namespace {
 }
 
 #[derive(Clone)]
-pub(crate) struct LuoshuData {
-    pub(crate) configuration_store: Arc<RwLock<ConfiguratorStore<LuoshuSledStorage>>>,
-    pub(crate) namespace_store: Arc<RwLock<NamespaceStore<LuoshuSledStorage>>>,
-    pub(crate) service_store: Arc<RwLock<RegistryStore<LuoshuSledStorage>>>,
+pub struct LuoshuData {
+    pub configuration_store: Arc<RwLock<ConfiguratorStore<LuoshuSledStorage>>>,
+    pub namespace_store: Arc<RwLock<NamespaceStore<LuoshuSledStorage>>>,
+    pub service_store: Arc<RwLock<RegistryStore<LuoshuSledStorage>>>,
 }
 
 impl LuoshuData {
@@ -89,8 +89,8 @@ impl LuoshuData {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub(crate) enum LuoshuDataEnum {
+#[derive(Clone, Serialize, Deserialize)]
+pub enum LuoshuDataEnum {
     Namespace(NamespaceReg),
     Configuration(ConfigurationReg),
     Service(ServiceReg),
@@ -132,6 +132,26 @@ impl LuoshuData {
                 .write()
                 .await
                 .append(value.into())?,
+        };
+        Ok(())
+    }
+    pub async fn remove(&self, value: &LuoshuDataEnum) -> Result<()> {
+        match value {
+            LuoshuDataEnum::Namespace(value) => self
+                .namespace_store
+                .write()
+                .await
+                .remove(value.into())?,
+            LuoshuDataEnum::Configuration(value) => self
+                .configuration_store
+                .write()
+                .await
+                .remove(value.into())?,
+            LuoshuDataEnum::Service(value) => self
+                .service_store
+                .write()
+                .await
+                .remove(value.into())?,
         };
         Ok(())
     }

@@ -87,7 +87,7 @@ impl<T> Store for ConfiguratorStore<T>
         Ok(())
     }
 
-    fn drop(&mut self, value: Self::Target) -> Result<()> {
+    fn remove(&mut self, value: Self::Target) -> Result<()> {
         match self
             .values
             .iter_mut()

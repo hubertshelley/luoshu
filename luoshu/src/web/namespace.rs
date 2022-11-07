@@ -1,10 +1,9 @@
 use luoshu_core::Store;
 use salvo::{handler, writer::Json, Depot, Request, Response, Router};
 
-use crate::data::NamespaceReg;
+use crate::data::{LuoshuData, NamespaceReg};
 use crate::web::error::WebResult;
 use crate::web::resp::Resp;
-use crate::LuoshuData;
 // use crate::web::LUOSHU_DATA;
 
 pub fn get_routers() -> Router {

@@ -1,21 +1,11 @@
-use bytes::{Buf, BytesMut};
 use clap::Parser;
-use error::LuoshuResult;
 use luoshu_core::Store;
-use luoshu_namespace::Namespace;
-use std::net::SocketAddr;
 use tokio::net::TcpListener;
 
-mod data;
-mod error;
-mod web;
-
-use crate::data::{Frame, LuoshuData};
-use crate::web::run_server;
 use anyhow::Result;
-use tokio::io::BufWriter;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
+use luoshu::data::{Connection, LuoshuData};
+use luoshu::web::run_server;
+
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -44,7 +34,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         data.namespace_store
             .write()
             .await
-            .append(Namespace::new("default".into()))?;
+            .append("default".into())?;
         data.namespace_store.write().await.save()?;
     }
     let _data = data.clone();
@@ -67,64 +57,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             };
         });
-    }
-}
-
-struct Connection {
-    stream: BufWriter<TcpStream>,
-    buffer: BytesMut,
-    pub client: SocketAddr,
-}
-
-impl Connection {
-    /// Create a new `Connection`, backed by `socket`. Read and write buffers
-    /// are initialized.
-    pub fn new(socket: TcpStream, client: SocketAddr) -> Self {
-        Self {
-            stream: BufWriter::new(socket),
-            buffer: BytesMut::with_capacity(4096), // 4 * 1024
-            client,
-        }
-    }
-
-    pub async fn process(&mut self, data: LuoshuData) -> LuoshuResult<()> {
-        loop {
-            if let Some(frame) = self.read_frame().await? {
-                match frame.action {
-                    data::ActionEnum::Up => data.append(&frame.data).await?,
-                    data::ActionEnum::Down => todo!(),
-                    data::ActionEnum::Sync => todo!(),
-                };
-            }
-        }
-    }
-
-    pub async fn read_frame(&mut self) -> LuoshuResult<Option<Frame>> {
-        if 0 == self.stream.read_buf(&mut self.buffer).await? {
-            return if self.buffer.is_empty() {
-                Ok(None)
-            } else {
-                Err(error::AppError::Io(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "connection reset by peer",
-                )))
-            };
-        }
-        let data_len = self.buffer.get_u32() as usize;
-        let data = &self.buffer[..data_len];
-        match Frame::parse(data) {
-            Ok(frame) => Ok(Some(frame)),
-            Err(_) => Ok(None),
-        }
-    }
-
-    pub async fn write_frame(&mut self, frame: &Frame) -> Result<()> {
-        let data = serde_json::to_vec(&frame)?;
-        let data_len = data.len();
-        self.stream.write_u32(data_len as u32).await?;
-        self.stream.write_all(&serde_json::to_vec(&frame)?).await?;
-        self.stream.flush().await?;
-        Ok(())
     }
 }
 

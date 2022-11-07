@@ -35,7 +35,7 @@ pub trait Store {
     /// 添加数据
     fn append(&mut self, value: Self::Target) -> Result<()>;
     /// 删除数据
-    fn drop(&mut self, value: Self::Target) -> Result<()>;
+    fn remove(&mut self, value: Self::Target) -> Result<()>;
 }
 
 /// 存储trait

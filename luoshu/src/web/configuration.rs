@@ -1,10 +1,9 @@
-use crate::data::ConfigurationReg;
+use crate::data::{ConfigurationReg, LuoshuData};
 use luoshu_core::Store;
 use salvo::{handler, writer::Json, Depot, Request, Response, Router};
 
 use crate::web::error::WebResult;
 use crate::web::resp::Resp;
-use crate::LuoshuData;
 
 // use crate::web::LUOSHU_DATA;
 

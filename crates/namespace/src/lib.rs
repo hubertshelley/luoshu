@@ -24,6 +24,12 @@ impl Default for Namespace {
     }
 }
 
+impl From<&str> for Namespace {
+    fn from(s: &str) -> Self {
+        Self::new(s.into())
+    }
+}
+
 impl Namespace {
     /// 创建命名空间
     pub fn new(name: String) -> Self {
@@ -73,7 +79,7 @@ impl<T> Store for NamespaceStore<T>
         Ok(())
     }
 
-    fn drop(&mut self, value: Self::Target) -> Result<()> {
+    fn remove(&mut self, value: Self::Target) -> Result<()> {
         // 默认命名空间不会删除
         if value.name != *"default" {
             self.values.retain(|x| x.name == value.name);

@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub(crate) enum AppError {
+pub enum AppError {
     #[error("Parse: `{0}`")]
     Any(#[from] anyhow::Error),
     #[error("Io: `{0}`")]
@@ -9,4 +9,4 @@ pub(crate) enum AppError {
 }
 
 #[allow(dead_code)]
-pub(crate) type LuoshuResult<T> = Result<T, AppError>;
+pub type LuoshuResult<T> = Result<T, AppError>;
