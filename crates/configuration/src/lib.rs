@@ -37,8 +37,8 @@ impl Configurator {
 
 /// 配置中心存储
 pub struct ConfiguratorStore<T>
-where
-    T: Storage,
+    where
+        T: Storage,
 {
     storage: T,
     /// 配置中心列表
@@ -46,8 +46,8 @@ where
 }
 
 impl<T> Store for ConfiguratorStore<T>
-where
-    T: Storage,
+    where
+        T: Storage,
 {
     type Target = Configurator;
 
@@ -68,11 +68,45 @@ where
     fn set_values(&mut self, values: Vec<Self::Target>) {
         self.values = values;
     }
+
+    fn append(&mut self, value: Self::Target) -> Result<()> {
+        match self
+            .values
+            .iter_mut()
+            .find(|x| x.namespace == value.namespace)
+        {
+            None => {
+                self.values.push(value);
+            }
+            Some(config_map) => {
+                for (name, config) in value.configuration {
+                    config_map.configuration.insert(name, config);
+                }
+            }
+        };
+        Ok(())
+    }
+
+    fn drop(&mut self, value: Self::Target) -> Result<()> {
+        match self
+            .values
+            .iter_mut()
+            .find(|x| x.namespace == value.namespace)
+        {
+            None => {}
+            Some(config_map) => {
+                for (name, _config) in value.configuration {
+                    config_map.configuration.remove(&name);
+                }
+            }
+        };
+        Ok(())
+    }
 }
 
 impl<T> ConfiguratorStore<T>
-where
-    T: Storage,
+    where
+        T: Storage,
 {
     /// 创建配置中心存储
     pub fn new(storage: T) -> Self {
@@ -80,23 +114,5 @@ where
             storage,
             values: vec![],
         }
-    }
-    /// 添加配置中心
-    pub fn append_configurator(&mut self, configurator: Configurator) -> Result<()> {
-        match self
-            .values
-            .iter_mut()
-            .find(|x| x.namespace == configurator.namespace)
-        {
-            None => {
-                self.values.push(configurator);
-            }
-            Some(value) => {
-                for (name, config) in configurator.configuration {
-                    value.configuration.insert(name, config);
-                }
-            }
-        };
-        Ok(())
     }
 }

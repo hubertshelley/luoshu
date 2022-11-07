@@ -60,7 +60,7 @@ mod tests {
         registry.register_service(("127.0.0.1", 8000).into()).unwrap();
         let storage = LuoshuSledStorage::new("registry_store_save_test");
         let mut store = RegistryStore::new(storage);
-        store.append_registry(registry).unwrap();
+        store.append(registry).unwrap();
         store.save().unwrap();
     }
 
@@ -72,7 +72,7 @@ mod tests {
             .unwrap();
         let storage = LuoshuSledStorage::new("configurator_store_save_test");
         let mut store = ConfiguratorStore::new(storage);
-        store.append_configurator(configurator).unwrap();
+        store.append(configurator).unwrap();
         store.save().unwrap();
     }
 

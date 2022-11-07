@@ -65,6 +65,21 @@ impl<T> Store for NamespaceStore<T>
     fn set_values(&mut self, values: Vec<Self::Target>) {
         self.values = values;
     }
+
+    fn append(&mut self, value: Self::Target) -> Result<()> {
+        if !self.values.clone().iter().any(|x| x.name == value.name) {
+            self.values.push(value);
+        }
+        Ok(())
+    }
+
+    fn drop(&mut self, value: Self::Target) -> Result<()> {
+        // 默认命名空间不会删除
+        if value.name != *"default" {
+            self.values.retain(|x| x.name == value.name);
+        }
+        Ok(())
+    }
 }
 
 impl<T> NamespaceStore<T>
@@ -77,12 +92,5 @@ impl<T> NamespaceStore<T>
             storage,
             values: vec![],
         }
-    }
-    /// 添加命名空间
-    pub fn append_namespace(&mut self, namespace: Namespace) -> Result<()> {
-        if !self.values.clone().iter().any(|x| x.name == namespace.name) {
-            self.values.push(namespace);
-        }
-        Ok(())
     }
 }

@@ -1,5 +1,5 @@
 use luoshu_configuration::{Configurator, ConfiguratorStore};
-use luoshu_core::default_namespace;
+use luoshu_core::{default_namespace, Store};
 use luoshu_namespace::{Namespace, NamespaceStore};
 use luoshu_registry::{Registry, RegistryStore, Service};
 use luoshu_sled_storage::LuoshuSledStorage;
@@ -121,17 +121,17 @@ impl LuoshuData {
                 .namespace_store
                 .write()
                 .await
-                .append_namespace(value.into())?,
+                .append(value.into())?,
             LuoshuDataEnum::Configuration(value) => self
                 .configuration_store
                 .write()
                 .await
-                .append_configurator(value.into())?,
+                .append(value.into())?,
             LuoshuDataEnum::Service(value) => self
                 .service_store
                 .write()
                 .await
-                .append_registry(value.into())?,
+                .append(value.into())?,
         };
         Ok(())
     }

@@ -44,7 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         data.namespace_store
             .write()
             .await
-            .append_namespace(Namespace::new("default".into()))?;
+            .append(Namespace::new("default".into()))?;
         data.namespace_store.write().await.save()?;
     }
     let _data = data.clone();

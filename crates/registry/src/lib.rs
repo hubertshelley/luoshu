@@ -74,6 +74,44 @@ impl<T> Store for RegistryStore<T>
     fn set_values(&mut self, values: Vec<Self::Target>) {
         self.values = values;
     }
+
+    fn append(&mut self, value: Self::Target) -> Result<()> {
+        match self
+            .values
+            .iter_mut()
+            .find(|x| x.namespace == value.namespace && x.name == value.name)
+        {
+            None => {
+                self.values.push(value);
+            }
+            Some(item) => {
+                for service in &value.services {
+                    for sub_value in item.services.iter_mut() {
+                        if sub_value == service {
+                            sub_value.fresh();
+                        }
+                    }
+                }
+            }
+        };
+        Ok(())
+    }
+
+    fn drop(&mut self, value: Self::Target) -> Result<()> {
+        match self
+            .values
+            .iter_mut()
+            .find(|x| x.namespace == value.namespace && x.name == value.name)
+        {
+            None => {}
+            Some(item) => {
+                for service in &value.services {
+                    item.services.retain(|x| x == service);
+                }
+            }
+        };
+        Ok(())
+    }
 }
 
 impl<T> RegistryStore<T>
@@ -86,27 +124,5 @@ impl<T> RegistryStore<T>
             storage,
             values: vec![],
         }
-    }
-    /// 添加注册中心
-    pub fn append_registry(&mut self, registry: Registry) -> Result<()> {
-        match self
-            .values
-            .iter_mut()
-            .find(|x| x.namespace == registry.namespace && x.name == registry.name)
-        {
-            None => {
-                self.values.push(registry);
-            }
-            Some(value) => {
-                for service in &registry.services {
-                    for sub_value in value.services.iter_mut() {
-                        if sub_value == service {
-                            sub_value.fresh();
-                        }
-                    }
-                }
-            }
-        };
-        Ok(())
     }
 }
