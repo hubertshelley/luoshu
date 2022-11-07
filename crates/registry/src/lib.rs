@@ -4,30 +4,12 @@ extern crate chrono;
 
 mod service;
 
+pub use service::Service;
+
 use anyhow::Result;
-use chrono::Local;
 use luoshu_core::{Connection, Storage, Store};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-
-/// 服务
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Service {
-    /// host
-    pub host: String,
-    /// port
-    pub port: u16,
-    #[serde(skip_deserializing)]
-    reg_time: i64,
-}
-
-impl PartialEq<Self> for Service {
-    fn eq(&self, other: &Self) -> bool {
-        self.host == other.host && self.port == other.port
-    }
-}
-
-impl Eq for Service {}
 
 /// 注册中心
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -65,11 +47,7 @@ impl Registry {
     }
     /// 注册服务
     pub fn register_service(&mut self, host: String, port: u16) -> Result<()> {
-        self.services.push(Service {
-            host,
-            port,
-            reg_time: Local::now().timestamp(),
-        });
+        self.services.push(Service::new(host, port));
         Ok(())
     }
 }
@@ -137,17 +115,10 @@ where
             }
             Some(value) => {
                 for service in &registry.services {
-                    let mut edit_index = 0;
-                    let mut is_edit = false;
-                    for sub_value in &value.services {
+                    for sub_value in value.services.iter_mut() {
                         if sub_value == service {
-                            is_edit = true;
-                            break;
+                            sub_value.fresh();
                         }
-                        edit_index += 1;
-                    }
-                    if is_edit {
-                        value.services.get_mut(edit_index).unwrap().reg_time = service.reg_time
                     }
                 }
             }
