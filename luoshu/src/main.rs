@@ -13,10 +13,8 @@ mod web;
 use crate::data::{Frame, LuoshuData};
 use crate::web::run_server;
 use anyhow::Result;
-use std::io::Cursor;
-use tokio::io::AsyncReadExt;
-use tokio::io::AsyncWriteExt;
 use tokio::io::BufWriter;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 
 /// Simple program to greet a person
@@ -49,15 +47,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .append_namespace(Namespace::new("default".into()))?;
         data.namespace_store.write().await.save()?;
     }
-
-    if args.web {
-        run_server("0.0.0.0:19999", data).await;
-    }
+    let _data = data.clone();
+    tokio::task::spawn(async move {
+        if args.web {
+            run_server("0.0.0.0:19999", _data).await;
+        };
+    });
     let listener = TcpListener::bind("0.0.0.0:19998").await?;
+    tracing::info!("Luoshu listening on: http://0.0.0.0:19998");
     loop {
         let (stream, client) = listener.accept().await?;
+        let _data = data.clone();
         tokio::task::spawn(async move {
-            let _connection = Connection::new(stream, client);
+            let mut connection = Connection::new(stream, client);
+            match connection.process(_data).await {
+                Ok(_) => {}
+                Err(_) => {
+                    tracing::info!("{} left", client)
+                }
+            };
         });
     }
 }
@@ -81,56 +89,69 @@ impl Connection {
         }
     }
 
-    pub async fn read_frame(&mut self) -> LuoshuResult<Option<Frame>> {
+    pub async fn process(&mut self, data: LuoshuData) -> LuoshuResult<()> {
         loop {
-            if let Some(frame) = self.parse_frame()? {
-                return Ok(Some(frame));
-            }
-
-            if 0 == self.stream.read_buf(&mut self.buffer).await? {
-                if self.buffer.is_empty() {
-                    return Ok(None);
-                } else {
-                    // return Err("connection reset by peer".into());
-                    return Err(error::AppError::Io(std::io::Error::new(
-                        std::io::ErrorKind::Other,
-                        "connection reset by peer",
-                    )));
-                }
+            if let Some(frame) = self.read_frame().await? {
+                tracing::info!("{}", frame);
+                match frame.action {
+                    data::ActionEnum::Up => data.append(&frame.data).await?,
+                    data::ActionEnum::Down => todo!(),
+                    data::ActionEnum::Sync => todo!(),
+                };
             }
         }
     }
 
-    fn parse_frame(&mut self) -> Result<Option<Frame>> {
-        let mut buf = Cursor::new(&self.buffer[..]);
-
-        match Frame::check(&mut buf) {
-            Ok(_) => {
-                let len = buf.position() as usize;
-
-                buf.set_position(0);
-
-                let frame = Frame::parse(&mut buf)?;
-
-                // Discard the parsed data from the read buffer.
-                //
-                // When `advance` is called on the read buffer, all of the data
-                // up to `len` is discarded. The details of how this works is
-                // left to `BytesMut`. This is often done by moving an internal
-                // cursor, but it may be done by reallocating and copying data.
-                self.buffer.advance(len);
-
-                Ok(Some(frame))
+    pub async fn read_frame(&mut self) -> LuoshuResult<Option<Frame>> {
+        if 0 == self.stream.read_buf(&mut self.buffer).await? {
+            if self.buffer.is_empty() {
+                return Ok(None);
+            } else {
+                return Err(error::AppError::Io(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "connection reset by peer",
+                )));
             }
-            _ => Ok(None),
-            // Err(Incomplete) => Ok(None),
-            // Err(e) => Err(e.into()),
+        }
+        let data_len = self.buffer.get_u32() as usize;
+        tracing::info!("{}", data_len);
+        let data = &self.buffer[..data_len];
+        match Frame::parse(data) {
+            Ok(frame) => Ok(Some(frame)),
+            Err(_) => Ok(None),
         }
     }
 
     pub async fn write_frame(&mut self, frame: &Frame) -> Result<()> {
+        let data = serde_json::to_vec(&frame)?;
+        let data_len = data.len();
+        self.stream.write_u32(data_len as u32).await?;
         self.stream.write_all(&serde_json::to_vec(&frame)?).await?;
         self.stream.flush().await?;
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    // use tokio::net::TcpStream;
+
+    // use crate::{data::Frame, Connection};
+
+    #[tokio::test]
+    async fn frame_write_test() -> Result<(), Box<dyn std::error::Error>> {
+        // let addr = "127.0.0.1:19998".to_string();
+        // let stream = TcpStream::connect(addr.clone()).await.unwrap();
+        // let mut connection = Connection::new(stream, addr.parse()?);
+        // let frame = Frame {
+        //     action: crate::data::ActionEnum::Up,
+        //     data: crate::data::NamespaceReg {
+        //         name: "test".into(),
+        //     }
+        //     .into(),
+        // };
+        // connection.write_frame(&frame).await?;
+        // loop {}
         Ok(())
     }
 }
