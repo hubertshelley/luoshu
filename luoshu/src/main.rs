@@ -63,28 +63,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             match connection.process(_data).await {
                 Ok(_) => {}
                 Err(_) => {
-                    tracing::info!("{} left", client)
+                    tracing::info!("{} left", connection.client)
                 }
             };
         });
     }
 }
 
-#[allow(dead_code)]
 struct Connection {
     stream: BufWriter<TcpStream>,
     buffer: BytesMut,
-    client: SocketAddr,
+    pub client: SocketAddr,
 }
 
-#[allow(dead_code)]
 impl Connection {
     /// Create a new `Connection`, backed by `socket`. Read and write buffers
     /// are initialized.
     pub fn new(socket: TcpStream, client: SocketAddr) -> Self {
         Self {
             stream: BufWriter::new(socket),
-            buffer: BytesMut::with_capacity(4 * 1024),
+            buffer: BytesMut::with_capacity(4096), // 4 * 1024
             client,
         }
     }
@@ -92,7 +90,6 @@ impl Connection {
     pub async fn process(&mut self, data: LuoshuData) -> LuoshuResult<()> {
         loop {
             if let Some(frame) = self.read_frame().await? {
-                tracing::info!("{}", frame);
                 match frame.action {
                     data::ActionEnum::Up => data.append(&frame.data).await?,
                     data::ActionEnum::Down => todo!(),
@@ -104,17 +101,16 @@ impl Connection {
 
     pub async fn read_frame(&mut self) -> LuoshuResult<Option<Frame>> {
         if 0 == self.stream.read_buf(&mut self.buffer).await? {
-            if self.buffer.is_empty() {
-                return Ok(None);
+            return if self.buffer.is_empty() {
+                Ok(None)
             } else {
-                return Err(error::AppError::Io(std::io::Error::new(
+                Err(error::AppError::Io(std::io::Error::new(
                     std::io::ErrorKind::Other,
                     "connection reset by peer",
-                )));
-            }
+                )))
+            };
         }
         let data_len = self.buffer.get_u32() as usize;
-        tracing::info!("{}", data_len);
         let data = &self.buffer[..data_len];
         match Frame::parse(data) {
             Ok(frame) => Ok(Some(frame)),

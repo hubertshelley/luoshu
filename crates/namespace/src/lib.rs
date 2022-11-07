@@ -2,7 +2,7 @@
 #![deny(missing_docs)]
 
 use anyhow::Result;
-use luoshu_core::{get_default_uuid4, Connection, Storage, Store};
+use luoshu_core::{get_default_uuid4, Storage, Store};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -33,21 +33,18 @@ impl Namespace {
 }
 
 /// 命名空间存储
-pub struct NamespaceStore<T, U>
-where
-    T: Storage,
-    U: Connection,
+pub struct NamespaceStore<T>
+    where
+        T: Storage,
 {
-    connection: U,
     storage: T,
     /// 命名空间内容
     pub values: Vec<Namespace>,
 }
 
-impl<T, U> Store for NamespaceStore<T, U>
-where
-    T: Storage,
-    U: Connection,
+impl<T> Store for NamespaceStore<T>
+    where
+        T: Storage,
 {
     type Target = Namespace;
 
@@ -70,15 +67,13 @@ where
     }
 }
 
-impl<T, U> NamespaceStore<T, U>
-where
-    T: Storage,
-    U: Connection,
+impl<T> NamespaceStore<T>
+    where
+        T: Storage,
 {
     /// 创建命名空间存储
-    pub fn new(connection: U, storage: T) -> Self {
+    pub fn new(storage: T) -> Self {
         Self {
-            connection,
             storage,
             values: vec![],
         }
@@ -89,31 +84,5 @@ where
             self.values.push(namespace);
         }
         Ok(())
-    }
-}
-
-impl<T, U> Connection for NamespaceStore<T, U>
-where
-    T: Storage,
-    U: Connection,
-{
-    fn send(&self) {
-        self.connection.send()
-    }
-
-    fn recv(&self) {
-        self.connection.recv()
-    }
-
-    fn connected(&self) {
-        self.connection.connected()
-    }
-
-    fn disconnected(&self) {
-        self.connection.disconnected()
-    }
-
-    fn get_ipaddr(&self) -> std::net::SocketAddr {
-        self.connection.get_ipaddr()
     }
 }

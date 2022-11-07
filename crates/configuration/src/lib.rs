@@ -2,7 +2,7 @@
 #![deny(missing_docs)]
 
 use anyhow::Result;
-use luoshu_core::{Connection, Storage, Store};
+use luoshu_core::{get_default_uuid4, Storage, Store};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -11,6 +11,7 @@ use uuid::Uuid;
 /// 配置中心
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Configurator {
+    #[serde(default = "get_default_uuid4")]
     id: String,
     namespace: String,
     configuration: HashMap<String, Value>,
@@ -35,21 +36,18 @@ impl Configurator {
 }
 
 /// 配置中心存储
-pub struct ConfiguratorStore<T, U>
+pub struct ConfiguratorStore<T>
 where
     T: Storage,
-    U: Connection,
 {
-    connection: U,
     storage: T,
     /// 配置中心列表
     pub values: Vec<Configurator>,
 }
 
-impl<T, U> Store for ConfiguratorStore<T, U>
+impl<T> Store for ConfiguratorStore<T>
 where
     T: Storage,
-    U: Connection,
 {
     type Target = Configurator;
 
@@ -72,15 +70,13 @@ where
     }
 }
 
-impl<T, U> ConfiguratorStore<T, U>
+impl<T> ConfiguratorStore<T>
 where
     T: Storage,
-    U: Connection,
 {
     /// 创建配置中心存储
-    pub fn new(connection: U, storage: T) -> Self {
+    pub fn new(storage: T) -> Self {
         Self {
-            connection,
             storage,
             values: vec![],
         }
@@ -102,31 +98,5 @@ where
             }
         };
         Ok(())
-    }
-}
-
-impl<T, U> Connection for ConfiguratorStore<T, U>
-where
-    T: Storage,
-    U: Connection,
-{
-    fn send(&self) {
-        self.connection.send()
-    }
-
-    fn recv(&self) {
-        self.connection.recv()
-    }
-
-    fn connected(&self) {
-        self.connection.connected()
-    }
-
-    fn disconnected(&self) {
-        self.connection.disconnected()
-    }
-
-    fn get_ipaddr(&self) -> std::net::SocketAddr {
-        self.connection.get_ipaddr()
     }
 }

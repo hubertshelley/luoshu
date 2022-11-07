@@ -34,3 +34,9 @@ impl PartialEq<Self> for Service {
 }
 
 impl Eq for Service {}
+
+impl From<(&str, u16)> for Service {
+    fn from((host, port): (&str, u16)) -> Self {
+        Service::new(host.into(), port)
+    }
+}

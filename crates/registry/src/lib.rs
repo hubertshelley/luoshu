@@ -7,30 +7,19 @@ mod service;
 pub use service::Service;
 
 use anyhow::Result;
-use luoshu_core::{Connection, Storage, Store};
+use luoshu_core::{default_namespace, get_default_uuid4, Storage, Store};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// 注册中心
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Registry {
-    #[serde(default)]
+    #[serde(default = "get_default_uuid4")]
     id: String,
-    #[serde(default)]
+    #[serde(default = "default_namespace")]
     namespace: String,
     name: String,
     services: Vec<Service>,
-}
-
-impl Default for Registry {
-    fn default() -> Self {
-        Self {
-            id: Uuid::new_v4().to_string(),
-            namespace: "default".to_string(),
-            name: Default::default(),
-            services: Default::default(),
-        }
-    }
 }
 
 impl Registry {
@@ -46,28 +35,25 @@ impl Registry {
         }
     }
     /// 注册服务
-    pub fn register_service(&mut self, host: String, port: u16) -> Result<()> {
-        self.services.push(Service::new(host, port));
+    pub fn register_service(&mut self, service: Service) -> Result<()> {
+        self.services.push(service);
         Ok(())
     }
 }
 
 /// 注册中心存储
-pub struct RegistryStore<T, U>
-where
-    T: Storage,
-    U: Connection,
+pub struct RegistryStore<T>
+    where
+        T: Storage,
 {
-    connection: U,
     storage: T,
     /// 注册中心列表
     pub values: Vec<Registry>,
 }
 
-impl<T, U> Store for RegistryStore<T, U>
-where
-    T: Storage,
-    U: Connection,
+impl<T> Store for RegistryStore<T>
+    where
+        T: Storage,
 {
     type Target = Registry;
 
@@ -90,15 +76,13 @@ where
     }
 }
 
-impl<T, U> RegistryStore<T, U>
-where
-    T: Storage,
-    U: Connection,
+impl<T> RegistryStore<T>
+    where
+        T: Storage,
 {
     /// 创建注册中心存储
-    pub fn new(connection: U, storage: T) -> Self {
+    pub fn new(storage: T) -> Self {
         Self {
-            connection,
             storage,
             values: vec![],
         }
@@ -124,31 +108,5 @@ where
             }
         };
         Ok(())
-    }
-}
-
-impl<T, U> Connection for RegistryStore<T, U>
-where
-    T: Storage,
-    U: Connection,
-{
-    fn send(&self) {
-        self.connection.send()
-    }
-
-    fn recv(&self) {
-        self.connection.recv()
-    }
-
-    fn connected(&self) {
-        self.connection.connected()
-    }
-
-    fn disconnected(&self) {
-        self.connection.disconnected()
-    }
-
-    fn get_ipaddr(&self) -> std::net::SocketAddr {
-        self.connection.get_ipaddr()
     }
 }
