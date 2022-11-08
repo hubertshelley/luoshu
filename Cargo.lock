@@ -832,10 +832,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "luoshu_client"
-version = "0.1.0"
-
-[[package]]
 name = "luoshu_configuration"
 version = "0.1.0"
 dependencies = [
