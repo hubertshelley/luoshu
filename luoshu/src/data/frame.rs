@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use anyhow::Result;
+use crate::error::LuoshuResult;
 use serde::{Deserialize, Serialize};
 
 use super::LuoshuDataEnum;
@@ -8,23 +8,30 @@ use super::LuoshuDataEnum;
 #[allow(dead_code)]
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ActionEnum {
-    Up,
-    Down,
-    Sync,
+    Up(LuoshuDataEnum),
+    Down(LuoshuDataEnum),
+    Sync(LuoshuDataEnum),
+    Subscribe(String),
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Frame {
-    pub action: ActionEnum,
-    pub data: LuoshuDataEnum,
+    pub data: ActionEnum,
+}
+
+impl From<ActionEnum> for Frame {
+    fn from(data: ActionEnum) -> Self {
+        Self { data }
+    }
 }
 
 impl Display for Frame {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let action = match self.action {
-            ActionEnum::Up => "up",
-            ActionEnum::Down => "down",
-            ActionEnum::Sync => "sync",
+        let action = match self.data {
+            ActionEnum::Up(_) => "up",
+            ActionEnum::Down(_) => "down",
+            ActionEnum::Sync(_) => "sync",
+            _ => "other",
         };
         write!(f, "{}", action)
     }
@@ -32,15 +39,7 @@ impl Display for Frame {
 
 #[allow(dead_code)]
 impl Frame {
-    pub fn parse(src: &[u8]) -> Result<Frame> {
-        // tracing::info!("{:?}", src.get_ref());
-        Ok(serde_json::from_slice(src)?)
-        // Ok(Frame {
-        //     action: ActionEnum::Up,
-        //     data: NamespaceReg {
-        //         name: "test".to_string(),
-        //     }
-        //     .into(),
-        // })
+    pub fn parse(src: &[u8]) -> LuoshuResult<Frame> {
+        serde_json::from_slice(src).map_err(|e| e.into())
     }
 }

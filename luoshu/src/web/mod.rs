@@ -8,12 +8,12 @@ use async_trait::async_trait;
 use salvo::prelude::{TcpListener, Text};
 use salvo::{handler, Depot, FlowCtrl, Handler, Request, Response, Router, Server};
 
-use crate::data::LuoshuData;
+use crate::data::LuoshuSledData;
 use configuration::get_routers as get_configuration_routers;
 use namespace::get_routers as get_namespace_routers;
 use service::get_routers as get_service_routers;
 
-pub async fn run_server(addr: &str, data: LuoshuData) {
+pub async fn run_server(addr: &str, data: LuoshuSledData) {
     let set_store = SetStore(data);
 
     let router = Router::with_hoop(set_store)
@@ -27,7 +27,7 @@ pub async fn run_server(addr: &str, data: LuoshuData) {
     Server::new(TcpListener::bind(addr)).serve(router).await;
 }
 
-struct SetStore(LuoshuData);
+struct SetStore(LuoshuSledData);
 
 #[async_trait]
 impl Handler for SetStore {

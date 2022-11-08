@@ -3,7 +3,7 @@ use luoshu_core::Store;
 use tokio::net::TcpListener;
 
 use anyhow::Result;
-use luoshu::data::{Connection, LuoshuData};
+use luoshu::data::{Connection, LuoshuSledData};
 use luoshu::web::run_server;
 
 /// Simple program to greet a person
@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing_subscriber::fmt().init();
 
-    let data = LuoshuData::new();
+    let data = LuoshuSledData::new();
 
     data.configuration_store.write().await.load()?;
     data.namespace_store.write().await.load()?;

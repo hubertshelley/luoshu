@@ -1,7 +1,7 @@
 use luoshu_core::Store;
 use salvo::{handler, writer::Json, Depot, Request, Response, Router};
 
-use crate::data::{LuoshuData, ServiceReg};
+use crate::data::{LuoshuDataHandle, LuoshuSledData, ServiceReg};
 use crate::web::error::WebResult;
 use crate::web::resp::Resp;
 
@@ -20,7 +20,7 @@ pub fn get_routers() -> Router {
 #[handler]
 async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
     let value = req.parse_body::<ServiceReg>().await?;
-    let data = depot.obtain::<LuoshuData>().unwrap();
+    let data = depot.obtain::<LuoshuSledData>().unwrap();
     data.append(&value.into()).await?;
     res.render(Json(Resp::success("ok")));
     Ok(())
@@ -28,7 +28,7 @@ async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Web
 
 #[handler]
 async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
-    let data = depot.obtain::<LuoshuData>().unwrap();
+    let data = depot.obtain::<LuoshuSledData>().unwrap();
     res.render(Json(Resp::success(
         data.service_store.write().await.get_values(),
     )));
