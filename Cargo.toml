@@ -1,11 +1,11 @@
 [workspace]
 exclude = [
-  "examples/*",
+    "examples/*",
 ]
 members = [
-  "luoshu",
-  "crates/*",
-  "crates/*/tests/*", # "tests/*",
+    "luoshu",
+    "crates/*",
+    "crates/*/tests/*", # "tests/*",
 ]
 
 [workspace.package]
@@ -40,9 +40,10 @@ tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
 uuid = "1.2.1"
 
-luoshu_configuration = {path = "./crates/configuration"}
-luoshu_connection = {path = "./crates/connection"}
-luoshu_core = {path = "./crates/core"}
-luoshu_namespace = {path = "./crates/namespace"}
-luoshu_registry = {path = "./crates/registry"}
-luoshu_sled_storage = {path = "./crates/sled_storage"}
+luoshu_configuration = { path = "./crates/configuration" }
+luoshu_connection = { path = "./crates/connection" }
+luoshu_core = { path = "./crates/core" }
+luoshu_namespace = { path = "./crates/namespace" }
+luoshu_registry = { path = "./crates/registry" }
+luoshu_sled_storage = { path = "./crates/sled_storage" }
+luoshu_mem_storage = { path = "./crates/mem_storage" }

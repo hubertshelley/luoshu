@@ -34,7 +34,7 @@ impl LuoshuSledStorage {
 }
 
 impl Storage for LuoshuSledStorage {
-    fn save(&self, key: &str, values: &[u8]) -> anyhow::Result<()> {
+    fn save(&mut self, key: &str, values: &[u8]) -> anyhow::Result<()> {
         self.storage.insert(key, values)?;
         self.storage.flush()?;
         Ok(())

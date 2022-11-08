@@ -817,6 +817,7 @@ dependencies = [
  "luoshu_configuration",
  "luoshu_connection",
  "luoshu_core",
+ "luoshu_mem_storage",
  "luoshu_namespace",
  "luoshu_registry",
  "luoshu_sled_storage",
@@ -858,6 +859,15 @@ dependencies = [
  "serde_json",
  "tokio",
  "uuid",
+]
+
+[[package]]
+name = "luoshu_mem_storage"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "luoshu_core",
+ "once_cell",
 ]
 
 [[package]]

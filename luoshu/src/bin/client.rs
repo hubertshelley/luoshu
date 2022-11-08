@@ -1,7 +1,7 @@
 use luoshu::data::{ActionEnum, Connection, Frame, NamespaceReg};
-use std::time::Duration;
+// use std::time::Duration;
 use tokio::net::TcpStream;
-use tokio::time::sleep;
+// use tokio::time::sleep;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -15,8 +15,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         .into(),
     };
+    connection.write_frame(&frame).await?;
+
     loop {
-        connection.write_frame(&frame).await?;
-        sleep(Duration::from_secs(10)).await;
+        if let Some(_frame) = connection.read_frame().await? {
+            // match frame.action {
+            //     ActionEnum::Up => data.append(&frame.data).await?,
+            //     ActionEnum::Down => data.remove(&frame.data).await?,
+            //     ActionEnum::Sync => todo!(),
+            // };
+        }
     }
 }

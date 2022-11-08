@@ -41,7 +41,7 @@ pub trait Store {
 /// 存储trait
 pub trait Storage: Clone + Send + Sync {
     /// 保存数据
-    fn save(&self, key: &str, values: &[u8]) -> Result<()>;
+    fn save(&mut self, key: &str, values: &[u8]) -> Result<()>;
     /// 加载数据
     fn load(&mut self, key: &str) -> Option<Vec<u8>>;
 }
@@ -54,7 +54,7 @@ mod tests {
     struct Store {}
 
     impl Storage for Store {
-        fn save(&self, _key: &str, _: &[u8]) -> Result<()> {
+        fn save(&mut self, _key: &str, _: &[u8]) -> Result<()> {
             Ok(())
         }
         fn load(&mut self, _key: &str) -> Option<Vec<u8>> {
