@@ -23,7 +23,9 @@ fn main() -> Result<()> {
     println!("{:#?}", configurator_store.get_values());
 
     let mut registry = Registry::new(None, "hello".into());
-    registry.register_service(("127.0.0.1", 7890).into()).unwrap();
+    registry
+        .register_service(("127.0.0.1", 7890).into())
+        .unwrap();
     let mut registry_store = RegistryStore::new(storage);
     registry_store.append(registry)?;
     registry_store.save()?;

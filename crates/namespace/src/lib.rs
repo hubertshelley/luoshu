@@ -40,8 +40,8 @@ impl Namespace {
 
 /// 命名空间存储
 pub struct NamespaceStore<T>
-    where
-        T: Storage,
+where
+    T: Storage,
 {
     storage: T,
     /// 命名空间内容
@@ -49,8 +49,8 @@ pub struct NamespaceStore<T>
 }
 
 impl<T> Store for NamespaceStore<T>
-    where
-        T: Storage,
+where
+    T: Storage,
 {
     type Target = Namespace;
 
@@ -89,8 +89,8 @@ impl<T> Store for NamespaceStore<T>
 }
 
 impl<T> NamespaceStore<T>
-    where
-        T: Storage,
+where
+    T: Storage,
 {
     /// 创建命名空间存储
     pub fn new(storage: T) -> Self {

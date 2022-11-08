@@ -43,8 +43,8 @@ impl Registry {
 
 /// 注册中心存储
 pub struct RegistryStore<T>
-    where
-        T: Storage,
+where
+    T: Storage,
 {
     storage: T,
     /// 注册中心列表
@@ -52,8 +52,8 @@ pub struct RegistryStore<T>
 }
 
 impl<T> Store for RegistryStore<T>
-    where
-        T: Storage,
+where
+    T: Storage,
 {
     type Target = Registry;
 
@@ -115,8 +115,8 @@ impl<T> Store for RegistryStore<T>
 }
 
 impl<T> RegistryStore<T>
-    where
-        T: Storage,
+where
+    T: Storage,
 {
     /// 创建注册中心存储
     pub fn new(storage: T) -> Self {

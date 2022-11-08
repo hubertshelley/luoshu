@@ -37,8 +37,8 @@ impl Configurator {
 
 /// 配置中心存储
 pub struct ConfiguratorStore<T>
-    where
-        T: Storage,
+where
+    T: Storage,
 {
     storage: T,
     /// 配置中心列表
@@ -46,8 +46,8 @@ pub struct ConfiguratorStore<T>
 }
 
 impl<T> Store for ConfiguratorStore<T>
-    where
-        T: Storage,
+where
+    T: Storage,
 {
     type Target = Configurator;
 
@@ -105,8 +105,8 @@ impl<T> Store for ConfiguratorStore<T>
 }
 
 impl<T> ConfiguratorStore<T>
-    where
-        T: Storage,
+where
+    T: Storage,
 {
     /// 创建配置中心存储
     pub fn new(storage: T) -> Self {

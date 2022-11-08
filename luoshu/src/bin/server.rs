@@ -6,7 +6,6 @@ use anyhow::Result;
 use luoshu::data::{Connection, LuoshuData};
 use luoshu::web::run_server;
 
-
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -57,29 +56,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             };
         });
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    // use tokio::net::TcpStream;
-
-    // use crate::{data::Frame, Connection};
-
-    #[tokio::test]
-    async fn frame_write_test() -> Result<(), Box<dyn std::error::Error>> {
-        // let addr = "127.0.0.1:19998".to_string();
-        // let stream = TcpStream::connect(addr.clone()).await.unwrap();
-        // let mut connection = Connection::new(stream, addr.parse()?);
-        // let frame = Frame {
-        //     action: crate::data::ActionEnum::Up,
-        //     data: crate::data::NamespaceReg {
-        //         name: "test".into(),
-        //     }
-        //     .into(),
-        // };
-        // connection.write_frame(&frame).await?;
-        // loop {}
-        Ok(())
     }
 }

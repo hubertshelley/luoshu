@@ -1,7 +1,7 @@
+use luoshu::data::{ActionEnum, Connection, Frame, NamespaceReg};
 use std::time::Duration;
 use tokio::net::TcpStream;
 use tokio::time::sleep;
-use luoshu::data::{ActionEnum, Connection, Frame, NamespaceReg};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -13,7 +13,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         data: NamespaceReg {
             name: "test".into(),
         }
-            .into(),
+        .into(),
     };
     loop {
         connection.write_frame(&frame).await?;

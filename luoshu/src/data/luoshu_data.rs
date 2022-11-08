@@ -74,18 +74,20 @@ pub struct LuoshuData {
 impl LuoshuData {
     pub fn new() -> Self {
         let storage: LuoshuSledStorage = LuoshuSledStorage::default();
-        let configuration_store = Arc::new(RwLock::new(ConfiguratorStore::new(
-            storage.clone(),
-        )));
-        let namespace_store = Arc::new(RwLock::new(NamespaceStore::new(
-            storage.clone(),
-        )));
+        let configuration_store = Arc::new(RwLock::new(ConfiguratorStore::new(storage.clone())));
+        let namespace_store = Arc::new(RwLock::new(NamespaceStore::new(storage.clone())));
         let service_store = Arc::new(RwLock::new(RegistryStore::new(storage)));
         LuoshuData {
             configuration_store,
             namespace_store,
             service_store,
         }
+    }
+}
+
+impl Default for LuoshuData {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -117,41 +119,33 @@ impl From<ServiceReg> for LuoshuDataEnum {
 impl LuoshuData {
     pub async fn append(&self, value: &LuoshuDataEnum) -> Result<()> {
         match value {
-            LuoshuDataEnum::Namespace(value) => self
-                .namespace_store
-                .write()
-                .await
-                .append(value.into())?,
+            LuoshuDataEnum::Namespace(value) => {
+                self.namespace_store.write().await.append(value.into())?
+            }
             LuoshuDataEnum::Configuration(value) => self
                 .configuration_store
                 .write()
                 .await
                 .append(value.into())?,
-            LuoshuDataEnum::Service(value) => self
-                .service_store
-                .write()
-                .await
-                .append(value.into())?,
+            LuoshuDataEnum::Service(value) => {
+                self.service_store.write().await.append(value.into())?
+            }
         };
         Ok(())
     }
     pub async fn remove(&self, value: &LuoshuDataEnum) -> Result<()> {
         match value {
-            LuoshuDataEnum::Namespace(value) => self
-                .namespace_store
-                .write()
-                .await
-                .remove(value.into())?,
+            LuoshuDataEnum::Namespace(value) => {
+                self.namespace_store.write().await.remove(value.into())?
+            }
             LuoshuDataEnum::Configuration(value) => self
                 .configuration_store
                 .write()
                 .await
                 .remove(value.into())?,
-            LuoshuDataEnum::Service(value) => self
-                .service_store
-                .write()
-                .await
-                .remove(value.into())?,
+            LuoshuDataEnum::Service(value) => {
+                self.service_store.write().await.remove(value.into())?
+            }
         };
         Ok(())
     }

@@ -57,7 +57,9 @@ mod tests {
     #[test]
     fn registry_store_save_test() {
         let mut registry = Registry::new(None, "test_registry".into());
-        registry.register_service(("127.0.0.1", 8000).into()).unwrap();
+        registry
+            .register_service(("127.0.0.1", 8000).into())
+            .unwrap();
         let storage = LuoshuSledStorage::new("registry_store_save_test");
         let mut store = RegistryStore::new(storage);
         store.append(registry).unwrap();

@@ -8,11 +8,10 @@ use async_trait::async_trait;
 use salvo::prelude::{TcpListener, Text};
 use salvo::{handler, Depot, FlowCtrl, Handler, Request, Response, Router, Server};
 
-
+use crate::data::LuoshuData;
 use configuration::get_routers as get_configuration_routers;
 use namespace::get_routers as get_namespace_routers;
 use service::get_routers as get_service_routers;
-use crate::data::LuoshuData;
 
 pub async fn run_server(addr: &str, data: LuoshuData) {
     let set_store = SetStore(data);
