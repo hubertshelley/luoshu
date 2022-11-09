@@ -10,7 +10,7 @@ use crate::data::Frame;
 use anyhow::Result;
 use tokio::sync::mpsc::UnboundedSender;
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct ServiceReg {
     #[serde(default = "default_namespace")]
     namespace: String,
@@ -42,7 +42,7 @@ impl From<&ServiceReg> for Registry {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct ConfigurationReg {
     #[serde(default = "default_namespace")]
     namespace: String,
@@ -63,7 +63,7 @@ impl From<&ConfigurationReg> for Configurator {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct NamespaceReg {
     pub name: String,
 }
@@ -74,7 +74,7 @@ impl From<&NamespaceReg> for Namespace {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum LuoshuDataEnum {
     Namespace(NamespaceReg),
     Configuration(ConfigurationReg),

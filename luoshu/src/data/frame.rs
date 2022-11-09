@@ -1,12 +1,10 @@
-use std::fmt::Display;
-
 use crate::error::LuoshuResult;
 use serde::{Deserialize, Serialize};
 
 use super::LuoshuDataEnum;
 
 #[allow(dead_code)]
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum ActionEnum {
     Up(LuoshuDataEnum),
     Down(LuoshuDataEnum),
@@ -14,7 +12,7 @@ pub enum ActionEnum {
     Subscribe(String),
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Frame {
     pub data: ActionEnum,
 }
@@ -22,18 +20,6 @@ pub struct Frame {
 impl From<ActionEnum> for Frame {
     fn from(data: ActionEnum) -> Self {
         Self { data }
-    }
-}
-
-impl Display for Frame {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let action = match self.data {
-            ActionEnum::Up(_) => "up",
-            ActionEnum::Down(_) => "down",
-            ActionEnum::Sync(_) => "sync",
-            _ => "other",
-        };
-        write!(f, "{}", action)
     }
 }
 

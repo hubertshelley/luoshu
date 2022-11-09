@@ -27,7 +27,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     loop {
         if let Some(frame) = connection.read_frame().await? {
-            println!("{}", frame);
             match frame.data {
                 ActionEnum::Up(frame) => data.write().await.append(&frame).await?,
                 ActionEnum::Down(frame) => data.write().await.remove(&frame).await?,

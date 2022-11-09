@@ -46,7 +46,7 @@ impl Connection {
         loop {
             tokio::select! {
                 Ok(Some(frame)) = self.read_frame() => {
-                    tracing::info!("Recv: {}: {}",self.client,frame);
+                    tracing::info!("Recv: {}: {:?}",self.client,frame);
                     match frame.data {
                     ActionEnum::Up(frame) => data.write().await.append(&frame).await?,
                     ActionEnum::Down(frame) => data.write().await.remove(&frame).await?,
@@ -57,7 +57,7 @@ impl Connection {
                 }
                 }
                 Some(frame) = rx.recv() => {
-                    tracing::info!("Send: {}: {}",self.client,frame);
+                    tracing::info!("Send: {}: {:?}",self.client,frame);
                     self.write_frame(&frame).await?;
                 }
             }
@@ -78,13 +78,18 @@ impl Connection {
         let data_len = self.buffer.get_u32() as usize;
         let data = &self.buffer[..data_len];
         match Frame::parse(data) {
-            Ok(frame) => Ok(Some(frame)),
-            Err(_) => Ok(None),
+            Ok(frame) => {
+                self.buffer.clear();
+                Ok(Some(frame))
+            }
+            Err(_) => {
+                self.buffer.clear();
+                Ok(None)
+            }
         }
     }
 
     pub async fn write_frame(&mut self, frame: &Frame) -> Result<()> {
-        println!("write_frame {}", frame);
         let data = serde_json::to_vec(&frame)?;
         let data_len = data.len();
         self.stream.write_u32(data_len as u32).await?;

@@ -89,7 +89,6 @@ impl LuoshuDataHandle for LuoshuSledData {
     }
 
     async fn subscribe(&mut self, value: String, sender: UnboundedSender<Frame>) -> Result<()> {
-        println!("subscribe: {}", value);
         match self.config_subscribers.get_mut(value.as_str()) {
             None => {
                 self.config_subscribers.insert(value, vec![sender]);

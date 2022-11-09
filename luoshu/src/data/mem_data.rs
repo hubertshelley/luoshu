@@ -63,7 +63,7 @@ impl LuoshuDataHandle for LuoshuMemData {
         match value {
             LuoshuDataEnum::Namespace(_) => {}
             LuoshuDataEnum::Configuration(config) => {
-                println!("{}", config.name);
+                println!("{:#?}", config);
             }
             LuoshuDataEnum::Service(_) => {}
             LuoshuDataEnum::Subscribe(_) => {}
