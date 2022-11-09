@@ -1,10 +1,13 @@
 use clap::Parser;
 use luoshu_core::Store;
+use std::sync::Arc;
 use tokio::net::TcpListener;
 
 use anyhow::Result;
 use luoshu::data::{Connection, LuoshuSledData};
 use luoshu::web::run_server;
+use once_cell::sync::Lazy;
+use tokio::sync::RwLock;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -19,22 +22,26 @@ struct Args {
     count: u8,
 }
 
+/// 全局存储文件配置
+static DB: Lazy<Arc<RwLock<LuoshuSledData>>> =
+    Lazy::new(|| Arc::new(RwLock::new(LuoshuSledData::new())));
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     tracing_subscriber::fmt().init();
 
-    let data = LuoshuSledData::new();
+    let data = DB.clone();
 
-    data.configuration_store.write().await.load()?;
-    data.namespace_store.write().await.load()?;
-    if data.namespace_store.read().await.values.is_empty() {
-        data.namespace_store
-            .write()
+    data.write().await.configuration_store.load()?;
+    data.write().await.namespace_store.load()?;
+    if data.write().await.namespace_store.values.is_empty() {
+        data.write()
             .await
+            .namespace_store
             .append("default".into())?;
-        data.namespace_store.write().await.save()?;
+        data.write().await.namespace_store.save()?;
     }
     let _data = data.clone();
     tokio::task::spawn(async move {

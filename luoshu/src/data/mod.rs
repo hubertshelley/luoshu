@@ -6,8 +6,11 @@ mod sled_data;
 use anyhow::Result;
 use bytes::{Buf, BytesMut};
 use std::net::SocketAddr;
+use std::sync::Arc;
+use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt, BufWriter};
 use tokio::net::TcpStream;
+use tokio::sync::RwLock;
 
 use crate::error::{LuoshuError, LuoshuResult};
 pub use frame::*;
@@ -38,23 +41,25 @@ impl Connection {
         }
     }
 
-    pub async fn process(&mut self, data: LuoshuSledData) -> LuoshuResult<()> {
+    pub async fn process(&mut self, data: Arc<RwLock<LuoshuSledData>>) -> LuoshuResult<()> {
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<Frame>();
-        // tokio::task::spawn(async move {
-        //     if let Some(frame) = rx.recv().await {
-        //         self.write_frame(&frame);
-        //     }
-        // });
         loop {
-            if let Some(frame) = self.read_frame().await? {
-                match frame.data {
-                    ActionEnum::Up(frame) => data.append(&frame).await?,
-                    ActionEnum::Down(frame) => data.remove(&frame).await?,
-                    ActionEnum::Sync(frame) => data.sync(&frame).await?,
+            tokio::select! {
+                Ok(Some(frame)) = self.read_frame() => {
+                    tracing::info!("Recv: {}: {}",self.client,frame);
+                    match frame.data {
+                    ActionEnum::Up(frame) => data.write().await.append(&frame).await?,
+                    ActionEnum::Down(frame) => data.write().await.remove(&frame).await?,
+                    ActionEnum::Sync(frame) => data.write().await.sync(&frame).await?,
                     ActionEnum::Subscribe(config_name) => {
-                        data.subscribe(config_name, tx.clone()).await?
+                        data.write().await.subscribe(config_name, tx.clone()).await?
                     }
-                };
+                }
+                }
+                Some(frame) = rx.recv() => {
+                    tracing::info!("Send: {}: {}",self.client,frame);
+                    self.write_frame(&frame).await?;
+                }
             }
         }
     }
@@ -79,11 +84,13 @@ impl Connection {
     }
 
     pub async fn write_frame(&mut self, frame: &Frame) -> Result<()> {
+        println!("write_frame {}", frame);
         let data = serde_json::to_vec(&frame)?;
         let data_len = data.len();
         self.stream.write_u32(data_len as u32).await?;
         self.stream.write_all(&serde_json::to_vec(&frame)?).await?;
         self.stream.flush().await?;
+        tokio::time::sleep(Duration::from_millis(10)).await;
         Ok(())
     }
 }

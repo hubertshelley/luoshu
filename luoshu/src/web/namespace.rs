@@ -1,5 +1,7 @@
 use luoshu_core::Store;
 use salvo::{handler, writer::Json, Depot, Request, Response, Router};
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 use crate::data::{LuoshuDataHandle, LuoshuSledData, NamespaceReg};
 use crate::web::error::WebResult;
@@ -21,18 +23,18 @@ pub fn get_routers() -> Router {
 #[handler]
 async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
     let value = req.parse_body::<NamespaceReg>().await?;
-    let data = depot.obtain::<LuoshuSledData>().unwrap();
-    data.append(&value.into()).await?;
+    let data = depot.obtain::<Arc<RwLock<LuoshuSledData>>>().unwrap();
+    data.write().await.append(&value.into()).await?;
     res.render(Json(Resp::success("ok")));
-    data.namespace_store.write().await.save()?;
+    data.write().await.namespace_store.save()?;
     Ok(())
 }
 
 #[handler]
 async fn list(_: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
-    let data = depot.obtain::<LuoshuSledData>().unwrap();
+    let data = depot.obtain::<Arc<RwLock<LuoshuSledData>>>().unwrap();
     res.render(Json(Resp::success(
-        data.namespace_store.write().await.get_values(),
+        data.write().await.namespace_store.get_values(),
     )));
     Ok(())
 }
