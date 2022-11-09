@@ -1,8 +1,6 @@
 //! registry for luoshu
 #![deny(missing_docs)]
 
-extern crate core;
-
 use luoshu_core::Storage;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -37,7 +35,8 @@ impl Storage for LuoshuMemStorage {
         self.storage.insert(key.into(), values.to_vec());
         Ok(())
     }
+
     fn load(&mut self, key: &str) -> Option<Vec<u8>> {
-        self.storage.get(key).map(|data| data.to_vec())
+        self.storage.get(key).cloned()
     }
 }

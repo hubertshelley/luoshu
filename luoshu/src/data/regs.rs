@@ -1,3 +1,5 @@
+use std::net::SocketAddr;
+
 use async_trait::async_trait;
 use luoshu_configuration::Configurator;
 use luoshu_core::default_namespace;
@@ -10,6 +12,7 @@ use crate::data::Frame;
 use anyhow::Result;
 use tokio::sync::mpsc::UnboundedSender;
 
+/// 注册中心请求体
 #[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct ServiceReg {
     #[serde(default = "default_namespace")]
@@ -20,6 +23,7 @@ pub struct ServiceReg {
 }
 
 impl ServiceReg {
+    /// 注册中心实例化
     pub fn new(namespace: String, name: String, service: Service) -> Self {
         Self {
             namespace,
@@ -42,6 +46,7 @@ impl From<&ServiceReg> for Registry {
     }
 }
 
+/// 配置中心请求体
 #[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct ConfigurationReg {
     #[serde(default = "default_namespace")]
@@ -63,9 +68,17 @@ impl From<&ConfigurationReg> for Configurator {
     }
 }
 
+/// 命名空间请求体
 #[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct NamespaceReg {
-    pub name: String,
+    name: String,
+}
+
+impl NamespaceReg {
+    /// 命名空间请求体实例化
+    pub fn new(name: String) -> Self {
+        Self { name }
+    }
 }
 
 impl From<&NamespaceReg> for Namespace {
@@ -74,11 +87,16 @@ impl From<&NamespaceReg> for Namespace {
     }
 }
 
+/// 洛书数据层枚举
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum LuoshuDataEnum {
+    /// 命名空间
     Namespace(NamespaceReg),
+    /// 配置中心
     Configuration(ConfigurationReg),
+    /// 注册中心服务
     Service(ServiceReg),
+    /// 消息订阅
     Subscribe(String),
 }
 
@@ -100,10 +118,21 @@ impl From<ServiceReg> for LuoshuDataEnum {
     }
 }
 
+/// 洛书数据层消息处理器接口
 #[async_trait]
 pub trait LuoshuDataHandle {
-    async fn append(&mut self, value: &LuoshuDataEnum) -> Result<()>;
+    /// 新增数据
+    async fn append(&mut self, value: &LuoshuDataEnum, client: Option<SocketAddr>) -> Result<()>;
+    /// 删除数据
     async fn remove(&mut self, value: &LuoshuDataEnum) -> Result<()>;
+    /// 同步数据
     async fn sync(&mut self, value: &LuoshuDataEnum) -> Result<()>;
-    async fn subscribe(&mut self, value: String, client: UnboundedSender<Frame>) -> Result<()>;
+    /// 订阅消息
+    async fn subscribe(
+        &mut self,
+        value: String,
+        subscriber_sender: UnboundedSender<Frame>,
+    ) -> Result<()>;
+    /// 连接断开
+    async fn broken(&mut self, client: SocketAddr) -> Result<()>;
 }

@@ -23,7 +23,7 @@ pub fn get_routers() -> Router {
 async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> WebResult<()> {
     let value = req.parse_body::<ServiceReg>().await?;
     let data = depot.obtain::<Arc<RwLock<LuoshuSledData>>>().unwrap();
-    data.write().await.append(&value.into()).await?;
+    data.write().await.append(&value.into(), None).await?;
     res.render(Json(Resp::success("ok")));
     Ok(())
 }

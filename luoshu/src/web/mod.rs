@@ -15,6 +15,7 @@ use configuration::get_routers as get_configuration_routers;
 use namespace::get_routers as get_namespace_routers;
 use service::get_routers as get_service_routers;
 
+/// Web管理层执行器
 pub async fn run_server(addr: &str, data: Arc<RwLock<LuoshuSledData>>) {
     let set_store = SetStore(data);
 

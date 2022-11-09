@@ -18,9 +18,11 @@ pub use mem_data::*;
 pub use regs::*;
 pub use sled_data::*;
 
+/// 连接
 pub struct Connection {
     stream: BufWriter<TcpStream>,
     buffer: BytesMut,
+    /// 客户端地址
     pub client: SocketAddr,
 }
 
@@ -41,29 +43,40 @@ impl Connection {
         }
     }
 
+    /// 服务端执行器
     pub async fn process(&mut self, data: Arc<RwLock<LuoshuSledData>>) -> LuoshuResult<()> {
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<Frame>();
         loop {
             tokio::select! {
-                Ok(Some(frame)) = self.read_frame() => {
-                    tracing::info!("Recv: {}: {:?}",self.client,frame);
-                    match frame.data {
-                    ActionEnum::Up(frame) => data.write().await.append(&frame).await?,
-                    ActionEnum::Down(frame) => data.write().await.remove(&frame).await?,
-                    ActionEnum::Sync(frame) => data.write().await.sync(&frame).await?,
-                    ActionEnum::Subscribe(config_name) => {
-                        data.write().await.subscribe(config_name, tx.clone()).await?
+            frame = self.read_frame() => {
+                    if let Ok(Some(frame)) = frame{
+                tracing::info!("Recv: {}: {:?}",self.client,frame);
+                match frame.data {
+                ActionEnum::Up(frame) => data.write().await.append(&frame, Some(self.client)).await?,
+                ActionEnum::Down(frame) => data.write().await.remove(&frame).await?,
+                ActionEnum::Sync(frame) => data.write().await.sync(&frame).await?,
+                ActionEnum::Subscribe(config_name) => data.write().await.subscribe(config_name, tx.clone()).await?,
+                ActionEnum::Ping => {
+                        match tx.send(ActionEnum::Pong.into()){
+                            Ok(_) => {},
+                            Err(_) => data.write().await.broken(self.client).await?,
+                        }
                     }
-                }
-                }
-                Some(frame) = rx.recv() => {
-                    tracing::info!("Send: {}: {:?}",self.client,frame);
-                    self.write_frame(&frame).await?;
-                }
+                ActionEnum::Pong => {}
+            }}else {
+                        data.write().await.broken(self.client).await?;
+                        return Ok(());
+                    }
             }
+            Some(frame) = rx.recv() => {
+                tracing::info!("Send: {}: {:?}",self.client,frame);
+                self.write_frame(&frame).await?;
+            }
+                    }
         }
     }
 
+    /// 读取一条消息帧
     pub async fn read_frame(&mut self) -> LuoshuResult<Option<Frame>> {
         if 0 == self.stream.read_buf(&mut self.buffer).await? {
             return if self.buffer.is_empty() {
@@ -89,6 +102,7 @@ impl Connection {
         }
     }
 
+    /// 写入一条消息帧
     pub async fn write_frame(&mut self, frame: &Frame) -> Result<()> {
         let data = serde_json::to_vec(&frame)?;
         let data_len = data.len();
