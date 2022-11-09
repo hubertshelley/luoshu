@@ -6,11 +6,11 @@ use luoshu_registry::{Registry, Service};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::data::{Connection, Frame};
+use crate::data::Frame;
 use anyhow::Result;
 use tokio::sync::mpsc::UnboundedSender;
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct ServiceReg {
     #[serde(default = "default_namespace")]
     namespace: String,
@@ -42,7 +42,7 @@ impl From<&ServiceReg> for Registry {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct ConfigurationReg {
     #[serde(default = "default_namespace")]
     namespace: String,
@@ -63,7 +63,7 @@ impl From<&ConfigurationReg> for Configurator {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct NamespaceReg {
     pub name: String,
 }
@@ -74,7 +74,7 @@ impl From<&NamespaceReg> for Namespace {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum LuoshuDataEnum {
     Namespace(NamespaceReg),
     Configuration(ConfigurationReg),
@@ -102,8 +102,8 @@ impl From<ServiceReg> for LuoshuDataEnum {
 
 #[async_trait]
 pub trait LuoshuDataHandle {
-    async fn append(&self, value: &LuoshuDataEnum) -> Result<()>;
-    async fn remove(&self, value: &LuoshuDataEnum) -> Result<()>;
-    async fn sync(&self, value: &LuoshuDataEnum) -> Result<()>;
-    async fn subscribe(&self, value: String, client: UnboundedSender<Frame>) -> Result<()>;
+    async fn append(&mut self, value: &LuoshuDataEnum) -> Result<()>;
+    async fn remove(&mut self, value: &LuoshuDataEnum) -> Result<()>;
+    async fn sync(&mut self, value: &LuoshuDataEnum) -> Result<()>;
+    async fn subscribe(&mut self, value: String, client: UnboundedSender<Frame>) -> Result<()>;
 }
