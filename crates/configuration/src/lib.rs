@@ -33,6 +33,14 @@ impl Configurator {
         self.configuration.insert(name, config);
         Ok(())
     }
+    /// 获取配置
+    pub fn get_configuration(&mut self, name: String) -> Option<Value> {
+        self.configuration.get(&name).cloned()
+    }
+    /// 判断配置是否存在
+    pub fn exists(&mut self, name: String) -> bool {
+        self.configuration.contains_key(&name)
+    }
 }
 
 /// 配置中心存储
@@ -42,7 +50,7 @@ where
 {
     storage: T,
     /// 配置中心列表
-    pub values: Vec<Configurator>,
+    values: Vec<Configurator>,
 }
 
 impl<T> Store for ConfiguratorStore<T>
@@ -114,5 +122,12 @@ where
             storage,
             values: vec![],
         }
+    }
+    /// 获取命名空间下的配置
+    pub fn get_configurations_by_namespace(&self, namespace: String) -> Option<Configurator> {
+        self.get_values()
+            .iter()
+            .cloned()
+            .find(|x| x.namespace == namespace)
     }
 }

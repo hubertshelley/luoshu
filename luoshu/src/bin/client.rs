@@ -1,4 +1,6 @@
-use luoshu::data::{ActionEnum, Connection, LuoshuDataHandle, LuoshuMemData, ServiceReg};
+use luoshu::data::{
+    ActionEnum, Connection, LuoshuDataHandle, LuoshuMemData, ServiceReg, Subscribe,
+};
 use luoshu_registry::Service;
 use std::sync::Arc;
 use std::time::Duration;
@@ -23,7 +25,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .into();
     connection.write_frame(&frame).await?;
     connection
-        .write_frame(&ActionEnum::Subscribe("test".to_string()).into())
+        .write_frame(
+            &ActionEnum::Subscribe(Subscribe::new("default".to_string(), "test".to_string()))
+                .into(),
+        )
         .await?;
     let time_sleep = || async {
         tokio::time::sleep(Duration::from_secs(5)).await;

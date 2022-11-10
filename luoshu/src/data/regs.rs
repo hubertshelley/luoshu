@@ -8,7 +8,7 @@ use luoshu_registry::{Registry, Service};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::data::Frame;
+use crate::data::{Frame, Subscribe};
 use anyhow::Result;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -65,6 +65,21 @@ impl From<&ConfigurationReg> for Configurator {
             )
             .unwrap();
         configuration
+    }
+}
+
+impl ConfigurationReg {
+    /// 配置中心实例化
+    pub fn new(namespace: String, name: String, config: Value) -> Self {
+        Self {
+            namespace,
+            name,
+            config,
+        }
+    }
+    /// 获取命名空间
+    pub fn get_namespace(&self) -> String {
+        self.namespace.clone()
     }
 }
 
@@ -130,8 +145,8 @@ pub trait LuoshuDataHandle {
     /// 订阅消息
     async fn subscribe(
         &mut self,
-        value: String,
-        subscriber_sender: UnboundedSender<Frame>,
+        subscribe: Subscribe,
+        subscriber_sender: &UnboundedSender<Frame>,
     ) -> Result<()>;
     /// 连接断开
     async fn broken(&mut self, client: SocketAddr) -> Result<()>;

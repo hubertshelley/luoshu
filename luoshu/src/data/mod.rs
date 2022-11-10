@@ -55,7 +55,7 @@ impl Connection {
                 ActionEnum::Up(frame) => data.write().await.append(&frame, Some(self.client)).await?,
                 ActionEnum::Down(frame) => data.write().await.remove(&frame).await?,
                 ActionEnum::Sync(frame) => data.write().await.sync(&frame).await?,
-                ActionEnum::Subscribe(config_name) => data.write().await.subscribe(config_name, tx.clone()).await?,
+                ActionEnum::Subscribe(subscribe) => data.write().await.subscribe(subscribe, &tx).await?,
                 ActionEnum::Ping => {
                         match tx.send(ActionEnum::Pong.into()){
                             Ok(_) => {},

@@ -1,4 +1,4 @@
-use crate::data::{Frame, LuoshuDataEnum, LuoshuDataHandle};
+use crate::data::{Frame, LuoshuDataEnum, LuoshuDataHandle, Subscribe};
 use anyhow::Result;
 use async_trait::async_trait;
 use luoshu_configuration::ConfiguratorStore;
@@ -78,8 +78,12 @@ impl LuoshuDataHandle for LuoshuMemData {
         Ok(())
     }
 
-    async fn subscribe(&mut self, value: String, connection: UnboundedSender<Frame>) -> Result<()> {
-        let (_, _) = (value, connection);
+    async fn subscribe(
+        &mut self,
+        subscribe: Subscribe,
+        subscriber_sender: &UnboundedSender<Frame>,
+    ) -> Result<()> {
+        let (_, _) = (subscribe, subscriber_sender);
         Ok(())
     }
 

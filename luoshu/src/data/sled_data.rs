@@ -1,4 +1,6 @@
-use crate::data::{ActionEnum, Frame, LuoshuDataEnum, LuoshuDataHandle};
+use crate::data::{
+    ActionEnum, ConfigurationReg, Frame, LuoshuDataEnum, LuoshuDataHandle, Subscribe,
+};
 use anyhow::Result;
 use async_trait::async_trait;
 use luoshu_configuration::ConfiguratorStore;
@@ -50,9 +52,16 @@ impl Default for LuoshuSledData {
 impl LuoshuDataHandle for LuoshuSledData {
     async fn append(&mut self, value: &LuoshuDataEnum, client: Option<SocketAddr>) -> Result<()> {
         match value {
-            LuoshuDataEnum::Namespace(value) => self.namespace_store.append(value.into())?,
+            LuoshuDataEnum::Namespace(value) => {
+                self.namespace_store.append(value.into())?;
+                self.namespace_store.save()?;
+            }
             LuoshuDataEnum::Configuration(value) => {
-                match self.config_subscribers.get_mut(&value.name) {
+                let subscriber: Subscribe = value.into();
+                match self
+                    .config_subscribers
+                    .get_mut(subscriber.to_string().as_str())
+                {
                     None => {}
                     Some(subscribers) => {
                         let mut pre_delete_list = vec![];
@@ -69,7 +78,8 @@ impl LuoshuDataHandle for LuoshuSledData {
                         }
                     }
                 }
-                self.configuration_store.append(value.into())?
+                self.configuration_store.append(value.into())?;
+                self.configuration_store.save()?;
             }
             LuoshuDataEnum::Service(value) => {
                 if let Some(client) = client {
@@ -98,13 +108,27 @@ impl LuoshuDataHandle for LuoshuSledData {
         Ok(())
     }
 
-    async fn subscribe(&mut self, value: String, sender: UnboundedSender<Frame>) -> Result<()> {
-        match self.config_subscribers.get_mut(value.as_str()) {
+    async fn subscribe(
+        &mut self,
+        subscribe: Subscribe,
+        subscriber_sender: &UnboundedSender<Frame>,
+    ) -> Result<()> {
+        match self.config_subscribers.get_mut(&subscribe.to_string()) {
             None => {
-                self.config_subscribers.insert(value, vec![sender]);
+                self.config_subscribers
+                    .insert(subscribe.to_string(), vec![subscriber_sender.clone()]);
             }
             Some(subscribers) => {
-                subscribers.push(sender);
+                subscribers.push(subscriber_sender.clone());
+            }
+        };
+        if let Some(mut configurator) = self
+            .configuration_store
+            .get_configurations_by_namespace(subscribe.namespace.clone())
+        {
+            if let Some(config) = configurator.get_configuration(subscribe.name.clone()) {
+                let config_reg = ConfigurationReg::new(subscribe.namespace, subscribe.name, config);
+                subscriber_sender.send(ActionEnum::Sync(config_reg.into()).into())?;
             }
         };
         Ok(())

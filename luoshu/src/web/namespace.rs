@@ -26,7 +26,6 @@ async fn append(req: &mut Request, res: &mut Response, depot: &mut Depot) -> Web
     let data = depot.obtain::<Arc<RwLock<LuoshuSledData>>>().unwrap();
     data.write().await.append(&value.into(), None).await?;
     res.render(Json(Resp::success("ok")));
-    data.write().await.namespace_store.save()?;
     Ok(())
 }
 
