@@ -4,6 +4,7 @@ exclude = [
 ]
 members = [
     "luoshu",
+    "clients/*",
     "crates/*",
     "crates/*/tests/*", # "tests/*",
 ]
@@ -40,6 +41,9 @@ tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
 uuid = "1.2.1"
 
+pyo3 = "0.17.1"
+pyo3-asyncio = "0.17.0"
+
 luoshu_configuration = { path = "./crates/configuration" }
 luoshu_connection = { path = "./crates/connection" }
 luoshu_core = { path = "./crates/core" }
@@ -47,3 +51,4 @@ luoshu_namespace = { path = "./crates/namespace" }
 luoshu_registry = { path = "./crates/registry" }
 luoshu_sled_storage = { path = "./crates/sled_storage" }
 luoshu_mem_storage = { path = "./crates/mem_storage" }
+luoshu = { path = "./luoshu" }
