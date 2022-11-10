@@ -52,13 +52,9 @@ impl LuoshuDataHandle for LuoshuSledData {
         match value {
             LuoshuDataEnum::Namespace(value) => self.namespace_store.append(value.into())?,
             LuoshuDataEnum::Configuration(value) => {
-                println!("Configuration append:{}", value.name);
                 match self.config_subscribers.get_mut(&value.name) {
-                    None => {
-                        println!("No subscribers");
-                    }
+                    None => {}
                     Some(subscribers) => {
-                        println!("Has subscribers");
                         let mut pre_delete_list = vec![];
                         for (index, subscriber) in subscribers.iter().enumerate() {
                             match subscriber.send(ActionEnum::Sync(value.clone().into()).into()) {
