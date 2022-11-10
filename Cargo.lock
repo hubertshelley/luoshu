@@ -812,10 +812,12 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bytes",
  "clap",
  "luoshu_configuration",
  "luoshu_connection",
  "luoshu_core",
+ "luoshu_mem_storage",
  "luoshu_namespace",
  "luoshu_registry",
  "luoshu_sled_storage",
@@ -829,10 +831,6 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
 ]
-
-[[package]]
-name = "luoshu_client"
-version = "0.1.0"
 
 [[package]]
 name = "luoshu_configuration"
@@ -861,6 +859,15 @@ dependencies = [
  "serde_json",
  "tokio",
  "uuid",
+]
+
+[[package]]
+name = "luoshu_mem_storage"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "luoshu_core",
+ "once_cell",
 ]
 
 [[package]]

@@ -2,7 +2,7 @@
 #![deny(missing_docs)]
 
 use anyhow::Result;
-use luoshu_core::{get_default_uuid4, Connection, Storage, Store};
+use luoshu_core::{get_default_uuid4, Storage, Store};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -24,6 +24,12 @@ impl Default for Namespace {
     }
 }
 
+impl From<&str> for Namespace {
+    fn from(s: &str) -> Self {
+        Self::new(s.into())
+    }
+}
+
 impl Namespace {
     /// 创建命名空间
     pub fn new(name: String) -> Self {
@@ -33,21 +39,18 @@ impl Namespace {
 }
 
 /// 命名空间存储
-pub struct NamespaceStore<T, U>
+pub struct NamespaceStore<T>
 where
     T: Storage,
-    U: Connection,
 {
-    connection: U,
     storage: T,
     /// 命名空间内容
     pub values: Vec<Namespace>,
 }
 
-impl<T, U> Store for NamespaceStore<T, U>
+impl<T> Store for NamespaceStore<T>
 where
     T: Storage,
-    U: Connection,
 {
     type Target = Namespace;
 
@@ -68,52 +71,32 @@ where
     fn set_values(&mut self, values: Vec<Self::Target>) {
         self.values = values;
     }
-}
 
-impl<T, U> NamespaceStore<T, U>
-where
-    T: Storage,
-    U: Connection,
-{
-    /// 创建命名空间存储
-    pub fn new(connection: U, storage: T) -> Self {
-        Self {
-            connection,
-            storage,
-            values: vec![],
+    fn append(&mut self, value: Self::Target) -> Result<()> {
+        if !self.values.clone().iter().any(|x| x.name == value.name) {
+            self.values.push(value);
         }
+        Ok(())
     }
-    /// 添加命名空间
-    pub fn append_namespace(&mut self, namespace: Namespace) -> Result<()> {
-        if !self.values.clone().iter().any(|x| x.name == namespace.name) {
-            self.values.push(namespace);
+
+    fn remove(&mut self, value: Self::Target) -> Result<()> {
+        // 默认命名空间不会删除
+        if value.name != *"default" {
+            self.values.retain(|x| x.name == value.name);
         }
         Ok(())
     }
 }
 
-impl<T, U> Connection for NamespaceStore<T, U>
+impl<T> NamespaceStore<T>
 where
     T: Storage,
-    U: Connection,
 {
-    fn send(&self) {
-        self.connection.send()
-    }
-
-    fn recv(&self) {
-        self.connection.recv()
-    }
-
-    fn connected(&self) {
-        self.connection.connected()
-    }
-
-    fn disconnected(&self) {
-        self.connection.disconnected()
-    }
-
-    fn get_ipaddr(&self) -> std::net::SocketAddr {
-        self.connection.get_ipaddr()
+    /// 创建命名空间存储
+    pub fn new(storage: T) -> Self {
+        Self {
+            storage,
+            values: vec![],
+        }
     }
 }

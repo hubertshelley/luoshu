@@ -1,12 +1,13 @@
 use clap::Parser;
 use luoshu_core::Store;
-use luoshu_namespace::Namespace;
+use std::sync::Arc;
+use tokio::net::TcpListener;
 
-mod data;
-mod web;
-
-use crate::data::LuoshuData;
-use crate::web::run_server;
+use anyhow::Result;
+use luoshu::data::{Connection, LuoshuSledData};
+use luoshu::web::run_server;
+use once_cell::sync::Lazy;
+use tokio::sync::RwLock;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -21,26 +22,46 @@ struct Args {
     count: u8,
 }
 
+/// 全局存储文件配置
+static DB: Lazy<Arc<RwLock<LuoshuSledData>>> =
+    Lazy::new(|| Arc::new(RwLock::new(LuoshuSledData::new())));
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     tracing_subscriber::fmt().init();
 
-    let data = LuoshuData::new();
+    let data = DB.clone();
 
-    data.configuration_store.write().await.load()?;
-    data.namespace_store.write().await.load()?;
-    if data.namespace_store.read().await.values.is_empty() {
-        data.namespace_store
-            .write()
+    data.write().await.configuration_store.load()?;
+    data.write().await.namespace_store.load()?;
+    if data.write().await.namespace_store.values.is_empty() {
+        data.write()
             .await
-            .append_namespace(Namespace::new("default".into()))?;
-        data.namespace_store.write().await.save()?;
+            .namespace_store
+            .append("default".into())?;
+        data.write().await.namespace_store.save()?;
     }
-
-    if args.web {
-        run_server("0.0.0.0:19999", data).await;
+    let _data = data.clone();
+    tokio::task::spawn(async move {
+        if args.web {
+            run_server("0.0.0.0:19999", _data).await;
+        };
+    });
+    let listener = TcpListener::bind("0.0.0.0:19998").await?;
+    tracing::info!("Luoshu listening on: http://0.0.0.0:19998");
+    loop {
+        let (stream, client) = listener.accept().await?;
+        let _data = data.clone();
+        tokio::task::spawn(async move {
+            let mut connection = Connection::new(stream, client);
+            match connection.process(_data).await {
+                Ok(_) => {}
+                Err(_) => {
+                    tracing::info!("{} left", connection.client)
+                }
+            };
+        });
     }
-    Ok(())
 }

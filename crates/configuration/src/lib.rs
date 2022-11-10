@@ -2,7 +2,7 @@
 #![deny(missing_docs)]
 
 use anyhow::Result;
-use luoshu_core::{Connection, Storage, Store};
+use luoshu_core::{get_default_uuid4, Storage, Store};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -11,6 +11,7 @@ use uuid::Uuid;
 /// 配置中心
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Configurator {
+    #[serde(default = "get_default_uuid4")]
     id: String,
     namespace: String,
     configuration: HashMap<String, Value>,
@@ -32,24 +33,29 @@ impl Configurator {
         self.configuration.insert(name, config);
         Ok(())
     }
+    /// 获取配置
+    pub fn get_configuration(&mut self, name: String) -> Option<Value> {
+        self.configuration.get(&name).cloned()
+    }
+    /// 判断配置是否存在
+    pub fn exists(&mut self, name: String) -> bool {
+        self.configuration.contains_key(&name)
+    }
 }
 
 /// 配置中心存储
-pub struct ConfiguratorStore<T, U>
+pub struct ConfiguratorStore<T>
 where
     T: Storage,
-    U: Connection,
 {
-    connection: U,
     storage: T,
     /// 配置中心列表
-    pub values: Vec<Configurator>,
+    values: Vec<Configurator>,
 }
 
-impl<T, U> Store for ConfiguratorStore<T, U>
+impl<T> Store for ConfiguratorStore<T>
 where
     T: Storage,
-    U: Connection,
 {
     type Target = Configurator;
 
@@ -70,34 +76,35 @@ where
     fn set_values(&mut self, values: Vec<Self::Target>) {
         self.values = values;
     }
-}
 
-impl<T, U> ConfiguratorStore<T, U>
-where
-    T: Storage,
-    U: Connection,
-{
-    /// 创建配置中心存储
-    pub fn new(connection: U, storage: T) -> Self {
-        Self {
-            connection,
-            storage,
-            values: vec![],
-        }
-    }
-    /// 添加配置中心
-    pub fn append_configurator(&mut self, configurator: Configurator) -> Result<()> {
+    fn append(&mut self, value: Self::Target) -> Result<()> {
         match self
             .values
             .iter_mut()
-            .find(|x| x.namespace == configurator.namespace)
+            .find(|x| x.namespace == value.namespace)
         {
             None => {
-                self.values.push(configurator);
+                self.values.push(value);
             }
-            Some(value) => {
-                for (name, config) in configurator.configuration {
-                    value.configuration.insert(name, config);
+            Some(config_map) => {
+                for (name, config) in value.configuration {
+                    config_map.configuration.insert(name, config);
+                }
+            }
+        };
+        Ok(())
+    }
+
+    fn remove(&mut self, value: Self::Target) -> Result<()> {
+        match self
+            .values
+            .iter_mut()
+            .find(|x| x.namespace == value.namespace)
+        {
+            None => {}
+            Some(config_map) => {
+                for (name, _config) in value.configuration {
+                    config_map.configuration.remove(&name);
                 }
             }
         };
@@ -105,28 +112,22 @@ where
     }
 }
 
-impl<T, U> Connection for ConfiguratorStore<T, U>
+impl<T> ConfiguratorStore<T>
 where
     T: Storage,
-    U: Connection,
 {
-    fn send(&self) {
-        self.connection.send()
+    /// 创建配置中心存储
+    pub fn new(storage: T) -> Self {
+        Self {
+            storage,
+            values: vec![],
+        }
     }
-
-    fn recv(&self) {
-        self.connection.recv()
-    }
-
-    fn connected(&self) {
-        self.connection.connected()
-    }
-
-    fn disconnected(&self) {
-        self.connection.disconnected()
-    }
-
-    fn get_ipaddr(&self) -> std::net::SocketAddr {
-        self.connection.get_ipaddr()
+    /// 获取命名空间下的配置
+    pub fn get_configurations_by_namespace(&self, namespace: String) -> Option<Configurator> {
+        self.get_values()
+            .iter()
+            .cloned()
+            .find(|x| x.namespace == namespace)
     }
 }

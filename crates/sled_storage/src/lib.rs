@@ -34,16 +34,15 @@ impl LuoshuSledStorage {
 }
 
 impl Storage for LuoshuSledStorage {
-    fn save(&self, key: &str, values: &[u8]) -> anyhow::Result<()> {
+    fn save(&mut self, key: &str, values: &[u8]) -> anyhow::Result<()> {
         self.storage.insert(key, values)?;
         self.storage.flush()?;
         Ok(())
     }
-    fn load(&mut self, key: &str) -> anyhow::Result<Vec<u8>> {
-        let data = self.storage.get(key)?;
-        match data {
-            Some(data) => Ok(data.to_vec()),
-            None => Ok("[]".as_bytes().to_vec()),
+    fn load(&mut self, key: &str) -> Option<Vec<u8>> {
+        match self.storage.get(key) {
+            Ok(Some(data)) => Some(data.to_vec()),
+            _ => None,
         }
     }
 }
@@ -52,18 +51,18 @@ impl Storage for LuoshuSledStorage {
 mod tests {
     use crate::LuoshuSledStorage;
     use luoshu_configuration::{Configurator, ConfiguratorStore};
-    use luoshu_connection::Connector;
     use luoshu_core::Store;
     use luoshu_registry::{Registry, RegistryStore};
 
     #[test]
     fn registry_store_save_test() {
         let mut registry = Registry::new(None, "test_registry".into());
-        registry.register_service("127.0.0.1".into(), 8000).unwrap();
-        let connector = Connector {};
+        registry
+            .register_service(("127.0.0.1", 8000).into())
+            .unwrap();
         let storage = LuoshuSledStorage::new("registry_store_save_test");
-        let mut store = RegistryStore::new(connector, storage);
-        store.append_registry(registry).unwrap();
+        let mut store = RegistryStore::new(storage);
+        store.append(registry).unwrap();
         store.save().unwrap();
     }
 
@@ -73,18 +72,16 @@ mod tests {
         configurator
             .set_configuration("test".into(), "{\"hello\": \"world\"}".into())
             .unwrap();
-        let connector = Connector {};
         let storage = LuoshuSledStorage::new("configurator_store_save_test");
-        let mut store = ConfiguratorStore::new(connector, storage);
-        store.append_configurator(configurator).unwrap();
+        let mut store = ConfiguratorStore::new(storage);
+        store.append(configurator).unwrap();
         store.save().unwrap();
     }
 
     #[test]
     fn configurator_store_load_test() {
-        let connector = Connector {};
         let storage = LuoshuSledStorage::default();
-        let mut store = ConfiguratorStore::new(connector, storage);
+        let mut store = ConfiguratorStore::new(storage);
         match store.load() {
             Ok(_) => println!("Ok"),
             Err(e) => {
