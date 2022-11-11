@@ -924,6 +924,7 @@ dependencies = [
  "luoshu_registry",
  "pyo3",
  "pyo3-asyncio",
+ "serde_json",
  "tokio",
 ]
 

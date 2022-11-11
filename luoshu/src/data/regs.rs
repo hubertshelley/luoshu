@@ -52,7 +52,8 @@ pub struct ConfigurationReg {
     #[serde(default = "default_namespace")]
     namespace: String,
     pub(crate) name: String,
-    config: Value,
+    /// 配置内容
+    pub config: Value,
 }
 
 impl From<&ConfigurationReg> for Configurator {
@@ -80,6 +81,10 @@ impl ConfigurationReg {
     /// 获取命名空间
     pub fn get_namespace(&self) -> String {
         self.namespace.clone()
+    }
+    /// 获取订阅名称
+    pub fn get_subscribe_str(&self) -> String {
+        format!("{}|{}", self.namespace.clone(), self.name.clone())
     }
 }
 

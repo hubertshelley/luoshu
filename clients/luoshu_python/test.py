@@ -4,14 +4,18 @@ from time import sleep
 import luoshu_python
 import asyncio
 
+luoshu = luoshu_python.Luoshu("default", "test", "127.0.0.1", 8000)
 
-async def process(namespace, name, host, port):
+luoshu.config_subscribe("default|test", lambda: print("1"))
+
+
+async def process():
     print("process")
-    await luoshu_python.sleep(namespace, name, host, port)
+    await luoshu.process()
 
 
 def async_running():
-    t = threading.Thread(target=lambda: asyncio.run(process("default", "test", "127.0.0.1", 8000)))
+    t = threading.Thread(target=lambda: asyncio.run(process()))
     t.setDaemon(True)
     t.start()
 

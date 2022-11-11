@@ -9,6 +9,7 @@ license.workspace = true
 readme.workspace = true
 repository.workspace = true
 version.workspace = true
+#version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
@@ -19,6 +20,7 @@ crate-type = ["cdylib"]
 pyo3 = { workspace = true, features = ["extension-module"] }
 pyo3-asyncio = { workspace = true, features = ["tokio-runtime"] }
 tokio = { workspace = true, features = ["full"] }
+serde_json = { workspace = true }
 
 luoshu = { workspace = true }
 luoshu_registry = { workspace = true }
