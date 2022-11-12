@@ -1,16 +1,15 @@
-use luoshu::data::{
-    ActionEnum, ConfigurationReg, Connection, LuoshuDataEnum, LuoshuDataHandle, LuoshuMemData,
-    ServiceReg,
-};
+use luoshu::data::{ActionEnum, ConfigurationReg, Connection, LuoshuDataEnum, LuoshuDataHandle, LuoshuMemData, ServiceReg, Subscribe};
 use luoshu_registry::Service;
 use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::types::PyFunction;
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex as std_Mutex};
+use std::sync::mpsc::{channel, Sender};
 use std::time::Duration;
 use tokio::net::TcpStream;
-use tokio::sync::RwLock;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::{Mutex};
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
@@ -24,31 +23,46 @@ struct Luoshu {
     name: String,
     host: String,
     port: u16,
-    subscribe_book: HashMap<String, PyObject>,
+    subscribe_book: Arc<std_Mutex<HashMap<String, Sender<ConfigurationReg>>>>,
+    subscribe_sender: UnboundedSender<Subscribe>,
+    subscribe_receiver: Arc<Mutex<UnboundedReceiver<Subscribe>>>,
 }
 
 #[pymethods]
 impl Luoshu {
     #[new]
     fn new(namespace: String, name: String, host: String, port: u16) -> Self {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<Subscribe>();
         Self {
             namespace,
             name,
             host,
             port,
-            subscribe_book: HashMap::new(),
+            subscribe_book: Arc::new(std_Mutex::new(HashMap::new())),
+            subscribe_sender: tx,
+            subscribe_receiver: Arc::new(Mutex::new(rx)),
         }
     }
 
     pub fn config_subscribe(
-        mut self_: PyRefMut<'_, Self>,
+        self_: PyRefMut<'_, Self>,
         py: Python<'_>,
+        namespace: String,
         config_name: String,
         callback: PyObject,
     ) -> PyResult<()> {
         let func = callback.cast_as::<PyFunction>(py)?;
         if func.is_callable() {
-            self_.subscribe_book.insert(config_name, callback);
+            let (tx, rx) = channel::<ConfigurationReg>();
+            let subscribe = Subscribe::new(namespace, config_name);
+            self_.subscribe_book.lock().unwrap().insert(subscribe.to_string(), tx);
+            self_.subscribe_sender.send(subscribe).expect("callback error");
+            loop {
+                if let Ok(config) = rx.recv() {
+                    let value = serde_json::to_string(&config).expect("callback error");
+                    func.call((value, ), None).expect("callback error");
+                };
+            };
         }
         Ok(())
     }
@@ -58,28 +72,15 @@ impl Luoshu {
         let name = self_.name.clone();
         let host = self_.host.clone();
         let port = self_.port;
-        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<ConfigurationReg>();
-        // let subscribe_book = self_.subscribe_book.clone();
-        let callback = move |x| {
-            tx.send(x).expect("callback error");
+        let subscribe_book = self_.subscribe_book.clone();
+        let subscribe_receiver = self_.subscribe_receiver.clone();
+        let callback = move |x: ConfigurationReg| {
+            if let Some(sender) = subscribe_book.lock().unwrap().get(&x.get_subscribe_str()) {
+                sender.send(x).expect("callback error");
+            }
         };
         pyo3_asyncio::tokio::future_into_py(py, async move {
-            tokio::task::spawn(async move {
-                loop {
-                    if let Some(config) = rx.recv().await {
-                        println!(
-                            "{}",
-                            serde_json::to_string(&config).expect("callback error")
-                        );
-                        // if let Some(c) = subscribe_book.get(config.get_subscribe_str().as_str()) {
-                        //     let func = c.cast_as::<PyFunction>(py).expect("callback error");
-                        //     let value = serde_json::to_string(&config).expect("callback error");
-                        //     func.call((value, ), None).expect("callback error");
-                        // }
-                    }
-                }
-            });
-            process(namespace, name, host, port, callback)
+            process(namespace, name, host, port, callback, subscribe_receiver)
                 .await
                 .map_err(|e| exceptions::PyException::new_err(e.to_string()))?;
             Ok(())
@@ -94,8 +95,9 @@ async fn process<T: Fn(ConfigurationReg)>(
     host: String,
     port: u16,
     callback: T,
+    subscribe_receiver: Arc<Mutex<UnboundedReceiver<Subscribe>>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let data = Arc::new(RwLock::new(LuoshuMemData::new()));
+    let data = Arc::new(Mutex::new(LuoshuMemData::new()));
     let addr = "127.0.0.1:19998".to_string();
     let stream = TcpStream::connect(addr.clone()).await.unwrap();
     let mut connection = Connection::new(stream, addr.parse()?);
@@ -107,18 +109,23 @@ async fn process<T: Fn(ConfigurationReg)>(
         tokio::time::sleep(Duration::from_secs(5)).await;
         true
     };
+    let mut subscribe_receiver = subscribe_receiver.lock().await;
     loop {
         tokio::select! {
+            Some(subscribe) = subscribe_receiver.recv()=>{
+                connection.write_frame(&ActionEnum::Subscribe(subscribe).into()).await?;
+            }
             Ok(Some(frame)) = connection.read_frame() => {
                 match frame.data {
-                    ActionEnum::Up(frame) => data.write().await.append(&frame, None).await?,
-                    ActionEnum::Down(frame) => data.write().await.remove(&frame).await?,
+                    ActionEnum::Up(frame) => data.lock().await.append(&frame, None).await?,
+                    ActionEnum::Down(frame) => data.lock().await.remove(&frame).await?,
                     ActionEnum::Sync(frame) => {
+                        eprintln!("Sync {:#?}", frame);
                        match frame.clone() {
                             LuoshuDataEnum::Configuration(config)=>callback(config),
                            _ => todo!(),
                        };
-                        data.write().await.sync(&frame).await?;
+                        data.lock().await.sync(&frame).await?;
                     },
                     _ => {}
                 }
