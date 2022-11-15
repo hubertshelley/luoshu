@@ -1,15 +1,18 @@
-use luoshu::data::{ActionEnum, ConfigurationReg, Connection, LuoshuDataEnum, LuoshuDataHandle, LuoshuMemData, ServiceReg, Subscribe};
+use luoshu::data::{
+    ActionEnum, ConfigurationReg, Connection, LuoshuDataEnum, LuoshuDataHandle, LuoshuMemData,
+    ServiceReg, Subscribe,
+};
 use luoshu_registry::Service;
 use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::types::PyFunction;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex as std_Mutex};
 use std::sync::mpsc::{channel, Sender};
+use std::sync::{Arc, Mutex as std_Mutex};
 use std::time::Duration;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use tokio::sync::{Mutex};
+use tokio::sync::Mutex;
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
@@ -55,19 +58,26 @@ impl Luoshu {
         if func.is_callable() {
             let (tx, rx) = channel::<ConfigurationReg>();
             let subscribe = Subscribe::new(namespace, config_name);
-            self_.subscribe_book.lock().unwrap().insert(subscribe.to_string(), tx);
-            self_.subscribe_sender.send(subscribe).expect("callback error");
+            self_
+                .subscribe_book
+                .lock()
+                .unwrap()
+                .insert(subscribe.to_string(), tx);
+            self_
+                .subscribe_sender
+                .send(subscribe)
+                .expect("callback error");
             loop {
                 if let Ok(config) = rx.recv() {
                     let value = serde_json::to_string(&config).expect("callback error");
-                    func.call((value, ), None).expect("callback error");
+                    func.call((value,), None).expect("callback error");
                 };
-            };
+            }
         }
         Ok(())
     }
 
-    pub fn process(self_: PyRef<'_, Self>, py: Python<'_>) -> PyResult<()> {
+    pub fn process<'p>(self_: PyRef<'p, Self>, py: Python<'p>) -> PyResult<&'p PyAny> {
         let namespace = self_.namespace.clone();
         let name = self_.name.clone();
         let host = self_.host.clone();
@@ -83,9 +93,8 @@ impl Luoshu {
             process(namespace, name, host, port, callback, subscribe_receiver)
                 .await
                 .map_err(|e| exceptions::PyException::new_err(e.to_string()))?;
-            Ok(())
-        })?;
-        Ok(())
+            Ok(Python::with_gil(|py| py.None()))
+        })
     }
 }
 
