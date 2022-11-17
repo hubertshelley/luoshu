@@ -945,6 +945,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "luoshu_rust"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "luoshu",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "luoshu_sled_storage"
 version = "0.1.0"
 dependencies = [

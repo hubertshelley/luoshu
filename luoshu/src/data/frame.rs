@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter};
 use super::LuoshuDataEnum;
 
 /// 消息订阅数据
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub struct Subscribe {
     pub(crate) namespace: String,
     pub(crate) name: String,

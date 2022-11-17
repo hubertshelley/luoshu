@@ -14,6 +14,7 @@ use tokio::sync::RwLock;
 
 use crate::error::{LuoshuError, LuoshuResult};
 pub use frame::*;
+pub use luoshu_registry::Service;
 pub use mem_data::*;
 pub use regs::*;
 pub use sled_data::*;
