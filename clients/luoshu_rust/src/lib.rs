@@ -139,18 +139,16 @@ impl LuoshuClient {
     }
 }
 
-/// add
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    #[tokio::test]
+    async fn it_works() -> LuoshuClientResult<()> {
+        let mut client = LuoshuClient::new(15666, "test_rust_server".to_string(), None).await;
+        tokio::spawn(async move {
+            client.registry().await.expect("TODO: panic message");
+        });
+        Ok(())
     }
 }
