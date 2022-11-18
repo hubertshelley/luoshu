@@ -3,6 +3,7 @@
 
 mod error;
 
+use anyhow::anyhow;
 use error::LuoshuClientResult;
 use luoshu::data::{
     ActionEnum, ConfigurationReg, Connection, LuoshuDataEnum, LuoshuDataHandle, LuoshuMemData,
@@ -30,6 +31,7 @@ pub struct LuoshuClient {
 
 impl LuoshuClient {
     /// 创建洛书客户端
+    #[inline]
     pub async fn new(port: u16, name: String, namespace: Option<String>) -> LuoshuClient {
         let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 19998);
         let stream = TcpStream::connect(addr).await.unwrap();
@@ -48,6 +50,7 @@ impl LuoshuClient {
         }
     }
     /// 注册服务
+    #[inline]
     pub async fn registry(&mut self) -> LuoshuClientResult<()> {
         // 生成服务数据
         let frame = ActionEnum::Up(
@@ -118,8 +121,9 @@ impl LuoshuClient {
             None => {
                 self.subscribe_book
                     .insert(subscribe_str, vec![subscribe_sender]);
-                // todo!("错误；处理")
-                self.subscribe_sender.send(subscribe).unwrap();
+                self.subscribe_sender
+                    .send(subscribe)
+                    .map_err(|e| anyhow!(e.to_string()))?;
             }
             Some(senders) => {
                 senders.push(subscribe_sender);
@@ -137,18 +141,92 @@ impl LuoshuClient {
         });
         Ok(())
     }
+    /// 提交配置并订阅相关的配置信息
+    #[inline]
+    pub async fn submit_config_with_subscribe<F, C>(
+        &mut self,
+        name: String,
+        config: C,
+        callback: F,
+        namespace: Option<String>,
+    ) -> LuoshuClientResult<()>
+    where
+        F: Fn(C) + Send + 'static,
+        C: Serialize + for<'a> Deserialize<'a>,
+    {
+        let namespace = namespace.unwrap_or_else(|| String::from("default"));
+        self.connection
+            .write_frame(
+                &ActionEnum::Up(
+                    ConfigurationReg::new(
+                        namespace.clone(),
+                        name.clone(),
+                        serde_json::from_slice(&serde_json::to_vec(&config)?)?,
+                    )
+                    .into(),
+                )
+                .into(),
+            )
+            .await?;
+        self.subscribe_config(name, callback, Some(namespace)).await
+    }
+    /// 提交配置
+    #[inline]
+    pub async fn submit_config<C>(
+        &mut self,
+        name: String,
+        config: C,
+        namespace: Option<String>,
+    ) -> LuoshuClientResult<()>
+    where
+        C: Serialize + for<'a> Deserialize<'a>,
+    {
+        let namespace = namespace.unwrap_or_else(|| String::from("default"));
+        self.connection
+            .write_frame(
+                &ActionEnum::Up(
+                    ConfigurationReg::new(
+                        namespace,
+                        name,
+                        serde_json::from_slice(&serde_json::to_vec(&config)?)?,
+                    )
+                    .into(),
+                )
+                .into(),
+            )
+            .await
+            .map_err(|e| e.into())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    // use std::thread::sleep;
+
+    #[derive(Debug, Serialize, Deserialize, Clone)]
+    struct Config {
+        test1: String,
+        test2: Vec<usize>,
+    }
 
     #[tokio::test]
     async fn it_works() -> LuoshuClientResult<()> {
         let mut client = LuoshuClient::new(15666, "test_rust_server".to_string(), None).await;
+        client
+            .subscribe_config(
+                "test_config2".to_string(),
+                |config: Config| println!("config changed:{:#?}", config),
+                None,
+            )
+            .await?;
         tokio::spawn(async move {
             client.registry().await.expect("TODO: panic message");
         });
+        // loop {
+        //     println!("sleep");
+        //     sleep(Duration::from_secs(10))
+        // }
         Ok(())
     }
 }

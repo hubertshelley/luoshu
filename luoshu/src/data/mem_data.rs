@@ -69,9 +69,7 @@ impl LuoshuDataHandle for LuoshuMemData {
     async fn sync(&mut self, value: &LuoshuDataEnum) -> Result<()> {
         match value {
             LuoshuDataEnum::Namespace(_) => {}
-            LuoshuDataEnum::Configuration(config) => {
-                println!("{:#?}", config);
-            }
+            LuoshuDataEnum::Configuration(_) => {}
             LuoshuDataEnum::Service(_) => {}
             LuoshuDataEnum::Subscribe(_) => {}
         };
