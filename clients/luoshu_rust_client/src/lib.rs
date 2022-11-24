@@ -7,7 +7,7 @@ use anyhow::anyhow;
 use error::LuoshuClientResult;
 use luoshu::data::{
     ActionEnum, ConfigurationReg, Connection, LuoshuDataEnum, LuoshuDataHandle, LuoshuMemData,
-    Service, ServiceReg, Subscribe,
+    LuoshuSyncDataEnum, Service, ServiceReg, Subscribe,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -74,10 +74,11 @@ impl LuoshuClient {
                 }
                 Ok(Some(frame)) = self.connection.read_frame() => {
                     match frame.data {
-                        ActionEnum::Up(frame) => self.data.append(&frame, None).await?,
+                        ActionEnum::Up(frame) => self.data.append(&frame, None, None).await?,
                         ActionEnum::Down(frame) => self.data.remove(&frame).await?,
                         ActionEnum::Sync(frame) => {
-                           if let LuoshuDataEnum::Configuration(config) = frame.clone() {
+                            if let LuoshuSyncDataEnum::LuoshuData(data) = frame.clone(){
+                           if let LuoshuDataEnum::Configuration(config) = data.clone() {
                                 if let Some(senders) = self.subscribe_book.get_mut(&config.get_subscribe_str()) {
                                         let mut pre_delete_list = vec![];
                                         for (index, sender) in senders.iter().enumerate() {
@@ -90,7 +91,7 @@ impl LuoshuClient {
                                                 senders.remove(index);
                                             }
                                     }
-                                };
+                                }};
                             self.data.sync(&frame).await?;
                         },
                         _ => {}
@@ -201,32 +202,32 @@ impl LuoshuClient {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
     // use std::thread::sleep;
 
-    #[derive(Debug, Serialize, Deserialize, Clone)]
-    struct Config {
-        test1: String,
-        test2: Vec<usize>,
-    }
+    // #[derive(Debug, Serialize, Deserialize, Clone)]
+    // struct Config {
+    //     test1: String,
+    //     test2: Vec<usize>,
+    // }
 
-    #[tokio::test]
-    async fn it_works() -> LuoshuClientResult<()> {
-        let mut client = LuoshuClient::new(15666, "test_rust_server".to_string(), None).await;
-        client
-            .subscribe_config(
-                "test_config2".to_string(),
-                |config: Config| println!("config changed:{:#?}", config),
-                None,
-            )
-            .await?;
-        tokio::spawn(async move {
-            client.registry().await.expect("TODO: panic message");
-        });
-        // loop {
-        //     println!("sleep");
-        //     sleep(Duration::from_secs(10))
-        // }
-        Ok(())
-    }
+    // #[tokio::test]
+    // async fn it_works() -> LuoshuClientResult<()> {
+    //     let mut client = LuoshuClient::new(15666, "test_rust_server".to_string(), None).await;
+    //     client
+    //         .subscribe_config(
+    //             "test_config2".to_string(),
+    //             |config: Config| println!("config changed:{:#?}", config),
+    //             None,
+    //         )
+    //         .await?;
+    //     tokio::spawn(async move {
+    //         client.registry().await.expect("TODO: panic message");
+    //     });
+    //     // loop {
+    //     //     println!("sleep");
+    //     //     sleep(Duration::from_secs(10))
+    //     // }
+    //     Ok(())
+    // }
 }

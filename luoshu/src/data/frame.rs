@@ -1,4 +1,4 @@
-use crate::data::ConfigurationReg;
+use crate::data::{ConfigurationReg, LuoshuSyncDataEnum};
 use crate::error::LuoshuResult;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
@@ -42,7 +42,7 @@ pub enum ActionEnum {
     /// 下线
     Down(LuoshuDataEnum),
     /// 同步
-    Sync(LuoshuDataEnum),
+    Sync(LuoshuSyncDataEnum),
     /// 订阅
     Subscribe(Subscribe),
     /// 心跳包：ping

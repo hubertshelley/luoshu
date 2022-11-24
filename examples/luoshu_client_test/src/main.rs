@@ -1,4 +1,4 @@
-use luoshu_rust::LuoshuClient;
+use luoshu_rust_client::LuoshuClient;
 use serde::{Deserialize, Serialize};
 use std::thread::sleep;
 use std::time::Duration;

@@ -49,31 +49,32 @@ impl Connection {
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<Frame>();
         loop {
             tokio::select! {
-            frame = self.read_frame() => {
+                frame = self.read_frame() => {
                     if let Ok(Some(frame)) = frame{
-                tracing::info!("Recv: {}: {:?}",self.client,frame);
-                match frame.data {
-                ActionEnum::Up(frame) => data.write().await.append(&frame, Some(self.client)).await?,
-                ActionEnum::Down(frame) => data.write().await.remove(&frame).await?,
-                ActionEnum::Sync(frame) => data.write().await.sync(&frame).await?,
-                ActionEnum::Subscribe(subscribe) => data.write().await.subscribe(subscribe, &tx).await?,
-                ActionEnum::Ping => {
-                        match tx.send(ActionEnum::Pong.into()){
-                            Ok(_) => {},
-                            Err(_) => data.write().await.broken(self.client).await?,
+                        tracing::info!("Recv: {}: {:?}",self.client,frame);
+                        match frame.data {
+                            ActionEnum::Up(frame) => data.write().await.append(&frame, Some(self.client), Some(&tx)).await?,
+                            ActionEnum::Down(frame) => data.write().await.remove(&frame).await?,
+                            ActionEnum::Sync(frame) => data.write().await.sync(&frame).await?,
+                            ActionEnum::Subscribe(subscribe) => data.write().await.subscribe(subscribe, &tx).await?,
+                            ActionEnum::Ping => {
+                                    match tx.send(ActionEnum::Pong.into()){
+                                        Ok(_) => {},
+                                        Err(_) => data.write().await.broken(self.client).await?,
+                                    }
+                                }
+                            ActionEnum::Pong => {}
                         }
-                    }
-                ActionEnum::Pong => {}
-            }}else {
+                    }else {
                         data.write().await.broken(self.client).await?;
                         return Ok(());
                     }
+                }
+                Some(frame) = rx.recv() => {
+                    tracing::info!("Send: {}: {:?}",self.client,frame);
+                    self.write_frame(&frame).await?;
+                }
             }
-            Some(frame) = rx.recv() => {
-                tracing::info!("Send: {}: {:?}",self.client,frame);
-                self.write_frame(&frame).await?;
-            }
-                    }
         }
     }
 

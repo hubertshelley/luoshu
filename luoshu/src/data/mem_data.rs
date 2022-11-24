@@ -1,4 +1,4 @@
-use crate::data::{Frame, LuoshuDataEnum, LuoshuDataHandle, Subscribe};
+use crate::data::{Frame, LuoshuDataEnum, LuoshuDataHandle, LuoshuSyncDataEnum, Subscribe};
 use anyhow::Result;
 use async_trait::async_trait;
 use luoshu_configuration::ConfiguratorStore;
@@ -42,8 +42,14 @@ impl Default for LuoshuMemData {
 
 #[async_trait]
 impl LuoshuDataHandle for LuoshuMemData {
-    async fn append(&mut self, value: &LuoshuDataEnum, client: Option<SocketAddr>) -> Result<()> {
+    async fn append(
+        &mut self,
+        value: &LuoshuDataEnum,
+        client: Option<SocketAddr>,
+        sender: Option<&UnboundedSender<Frame>>,
+    ) -> Result<()> {
         let _ = client;
+        let _ = sender;
         match value {
             LuoshuDataEnum::Namespace(value) => self.namespace_store.append(value.into())?,
             LuoshuDataEnum::Configuration(value) => {
@@ -66,12 +72,15 @@ impl LuoshuDataHandle for LuoshuMemData {
         Ok(())
     }
 
-    async fn sync(&mut self, value: &LuoshuDataEnum) -> Result<()> {
+    async fn sync(&mut self, value: &LuoshuSyncDataEnum) -> Result<()> {
         match value {
-            LuoshuDataEnum::Namespace(_) => {}
-            LuoshuDataEnum::Configuration(_) => {}
-            LuoshuDataEnum::Service(_) => {}
-            LuoshuDataEnum::Subscribe(_) => {}
+            LuoshuSyncDataEnum::Namespace(_) => {}
+            LuoshuSyncDataEnum::Configuration(_) => {}
+            LuoshuSyncDataEnum::Registry(registries) => {
+                print!("{:#?}", registries);
+                self.service_store.set_values(registries.clone())
+            }
+            LuoshuSyncDataEnum::LuoshuData(_) => {}
         };
         Ok(())
     }

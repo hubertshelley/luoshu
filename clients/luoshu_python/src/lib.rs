@@ -126,12 +126,12 @@ async fn process<T: Fn(ConfigurationReg)>(
             }
             Ok(Some(frame)) = connection.read_frame() => {
                 match frame.data {
-                    ActionEnum::Up(frame) => data.lock().await.append(&frame, None).await?,
+                    ActionEnum::Up(frame) => data.lock().await.append(&frame, None, None).await?,
                     ActionEnum::Down(frame) => data.lock().await.remove(&frame).await?,
                     ActionEnum::Sync(frame) => {
                         eprintln!("Sync {:#?}", frame);
                        match frame.clone() {
-                            LuoshuDataEnum::Configuration(config)=>callback(config),
+                            luoshu::data::LuoshuSyncDataEnum::LuoshuData(LuoshuDataEnum::Configuration(config))=>callback(config),
                            _ => todo!(),
                        };
                         data.lock().await.sync(&frame).await?;

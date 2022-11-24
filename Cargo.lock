@@ -868,6 +868,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "luoshu_client_test"
+version = "0.1.0"
+dependencies = [
+ "luoshu_rust_client",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "luoshu_configuration"
 version = "0.1.0"
 dependencies = [
@@ -945,7 +955,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "luoshu_rust"
+name = "luoshu_rust_client"
 version = "0.1.0"
 dependencies = [
  "anyhow",
