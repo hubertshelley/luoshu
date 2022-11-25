@@ -85,8 +85,6 @@ where
                 self.values.push(value);
             }
             Some(item) => {
-                println!("value: {:#?}", value);
-                println!("registry: {:#?}", item);
                 if item.services.contains(&value.services[0]) {
                     for service in &value.services {
                         for sub_value in item.services.iter_mut() {

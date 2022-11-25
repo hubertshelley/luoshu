@@ -51,7 +51,7 @@ impl Connection {
             tokio::select! {
                 frame = self.read_frame() => {
                     if let Ok(Some(frame)) = frame{
-                        // tracing::info!("Recv: {}: {:?}",self.client,frame);
+                        tracing::info!("Recv: {}: {:?}",self.client,frame);
                         match frame.data {
                             ActionEnum::Up(frame) => data.write().await.append(&frame, Some(self.client), Some(&tx)).await?,
                             ActionEnum::Down(frame) => data.write().await.remove(&frame).await?,
@@ -71,7 +71,7 @@ impl Connection {
                     }
                 }
                 Some(frame) = rx.recv() => {
-                    // tracing::info!("Send: {}: {:?}",self.client,frame);
+                    tracing::info!("Send: {}: {:?}",self.client,frame);
                     self.write_frame(&frame).await?;
                 }
             }
