@@ -85,12 +85,18 @@ where
                 self.values.push(value);
             }
             Some(item) => {
-                for service in &value.services {
-                    for sub_value in item.services.iter_mut() {
-                        if sub_value == service {
-                            sub_value.fresh();
+                println!("value: {:#?}", value);
+                println!("registry: {:#?}", item);
+                if item.services.contains(&value.services[0]) {
+                    for service in &value.services {
+                        for sub_value in item.services.iter_mut() {
+                            if sub_value == service {
+                                sub_value.fresh();
+                            }
                         }
                     }
+                } else {
+                    item.services.push(value.services[0].clone())
                 }
             }
         };
@@ -106,7 +112,7 @@ where
             None => {}
             Some(item) => {
                 for service in &value.services {
-                    item.services.retain(|x| x == service);
+                    item.services.retain(|x| x != service);
                 }
             }
         };

@@ -43,6 +43,14 @@ impl LuoshuSledData {
             sender_list: vec![],
         }
     }
+    fn send_sync_message(&mut self) -> Result<()> {
+        self.sender_list.retain(|sender| {
+            sender
+                .send(ActionEnum::Sync(self.service_store.get_values().into()).into())
+                .is_ok()
+        });
+        Ok(())
+    }
 }
 
 impl Default for LuoshuSledData {
@@ -101,12 +109,9 @@ impl LuoshuDataHandle for LuoshuSledData {
                 if let Some(sender) = sender {
                     self.sender_list.push(sender.clone());
                 }
+                println!("Service:{:#?}", value);
                 self.service_store.append(value.into())?;
-                self.sender_list.retain(|sender| {
-                    sender
-                        .send(ActionEnum::Sync(self.service_store.get_values().into()).into())
-                        .is_ok()
-                });
+                self.send_sync_message()?;
             }
             _ => {}
         };
@@ -160,11 +165,7 @@ impl LuoshuDataHandle for LuoshuSledData {
         tracing::info!("连接断开: {}", client);
         if let Some(service) = self.service_book.remove(&client) {
             self.service_store.remove((&service).into())?;
-            self.sender_list.retain(|sender| {
-                sender
-                    .send(ActionEnum::Down(service.clone().into()).into())
-                    .is_ok()
-            });
+            self.send_sync_message()?;
         };
         Ok(())
     }
