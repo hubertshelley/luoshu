@@ -1,11 +1,13 @@
-use crate::data::{Frame, LuoshuDataEnum, LuoshuDataHandle, LuoshuSyncDataEnum, Subscribe};
+use crate::data::{
+    Frame, LuoshuDataEnum, LuoshuDataHandle, LuoshuDataServiceHandle, LuoshuSyncDataEnum, Subscribe,
+};
 use anyhow::Result;
 use async_trait::async_trait;
 use luoshu_configuration::ConfiguratorStore;
 use luoshu_core::Store;
 use luoshu_mem_storage::LuoshuMemStorage;
 use luoshu_namespace::NamespaceStore;
-use luoshu_registry::RegistryStore;
+use luoshu_registry::{RegistryStore, Service};
 use std::net::SocketAddr;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -97,5 +99,16 @@ impl LuoshuDataHandle for LuoshuMemData {
     async fn broken(&mut self, client: SocketAddr) -> Result<()> {
         let _ = client;
         Ok(())
+    }
+}
+
+impl LuoshuDataServiceHandle for LuoshuMemData {
+    fn get_service(&mut self, name: String, namespace: Option<String>) -> Vec<Service> {
+        match self.service_store.get_service(name, namespace) {
+            None => {
+                vec![]
+            }
+            Some(registry) => registry.get_service(),
+        }
     }
 }

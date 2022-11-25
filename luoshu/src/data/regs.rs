@@ -200,12 +200,7 @@ pub trait LuoshuDataHandle {
 }
 
 /// 洛书数据层服务处理器接口
-#[async_trait]
 pub trait LuoshuDataServiceHandle {
     /// 获取服务
-    async fn get_service(
-        &mut self,
-        name: String,
-        namespace: Option<String>,
-    ) -> Result<Vec<Service>>;
+    fn get_service(&mut self, name: String, namespace: Option<String>) -> Vec<Service>;
 }
