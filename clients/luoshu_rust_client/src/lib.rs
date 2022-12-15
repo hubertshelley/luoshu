@@ -17,7 +17,39 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
-/// 洛书客户端结构体
+/// 洛书客户端结
+///
+/// 订阅配置信息，并注册服务到洛书
+/// ```
+/// use std::thread::sleep;
+/// use luoshu_rust_client::LuoshuClient;
+///
+/// #[derive(Debug, Serialize, Deserialize, Clone)]
+/// struct Config {
+///     test1: String,
+///     test2: Vec<usize>,
+/// }
+///
+/// #[tokio::test]
+/// async fn it_works() -> LuoshuClientResult<()> {
+///     let mut client = LuoshuClient::new(15666, "test_rust_server".to_string(), None).await;
+///     client
+///         .subscribe_config(
+///             "test_config2".to_string(),
+///             |config: Config| println!("config changed:{:#?}", config),
+///             None,
+///         )
+///         .await?;
+///     tokio::spawn(async move {
+///         client.registry().await.expect("TODO: panic message");
+///     });
+///     // loop {
+///     //     println!("sleep");
+///     //     sleep(Duration::from_secs(10))
+///     // }
+///     Ok(())
+/// }
+/// ```
 pub struct LuoshuClient {
     namespace: String,
     name: String,
@@ -59,9 +91,9 @@ impl LuoshuClient {
                 self.name.clone(),
                 Service::new("127.0.0.1".to_string(), self.port),
             )
-            .into(),
+                .into(),
         )
-        .into();
+            .into();
         self.connection.write_frame(&frame).await?;
         let time_sleep = || async {
             tokio::time::sleep(Duration::from_secs(5)).await;
@@ -110,9 +142,9 @@ impl LuoshuClient {
         callback: F,
         namespace: Option<String>,
     ) -> LuoshuClientResult<()>
-    where
-        F: Fn(C) + Send + 'static,
-        C: Serialize + for<'a> Deserialize<'a>,
+        where
+            F: Fn(C) + Send + 'static,
+            C: Serialize + for<'a> Deserialize<'a>,
     {
         let subscribe = Subscribe::new(namespace.unwrap_or_else(|| String::from("default")), name);
         let subscribe_str = subscribe.to_string();
@@ -151,9 +183,9 @@ impl LuoshuClient {
         callback: F,
         namespace: Option<String>,
     ) -> LuoshuClientResult<()>
-    where
-        F: Fn(C) + Send + 'static,
-        C: Serialize + for<'a> Deserialize<'a>,
+        where
+            F: Fn(C) + Send + 'static,
+            C: Serialize + for<'a> Deserialize<'a>,
     {
         let namespace = namespace.unwrap_or_else(|| String::from("default"));
         self.connection
@@ -164,9 +196,9 @@ impl LuoshuClient {
                         name.clone(),
                         serde_json::from_slice(&serde_json::to_vec(&config)?)?,
                     )
-                    .into(),
+                        .into(),
                 )
-                .into(),
+                    .into(),
             )
             .await?;
         self.subscribe_config(name, callback, Some(namespace)).await
@@ -179,8 +211,8 @@ impl LuoshuClient {
         config: C,
         namespace: Option<String>,
     ) -> LuoshuClientResult<()>
-    where
-        C: Serialize + for<'a> Deserialize<'a>,
+        where
+            C: Serialize + for<'a> Deserialize<'a>,
     {
         let namespace = namespace.unwrap_or_else(|| String::from("default"));
         self.connection
@@ -191,9 +223,9 @@ impl LuoshuClient {
                         name,
                         serde_json::from_slice(&serde_json::to_vec(&config)?)?,
                     )
-                    .into(),
+                        .into(),
                 )
-                .into(),
+                    .into(),
             )
             .await
             .map_err(|e| e.into())
