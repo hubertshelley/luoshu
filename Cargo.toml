@@ -4,8 +4,10 @@ exclude = [
 ]
 members = [
     "luoshu",
+    "clients/*",
     "crates/*",
     "crates/*/tests/*", # "tests/*",
+    "examples/luoshu_client_test",
 ]
 
 [workspace.package]
@@ -16,8 +18,8 @@ Luoshu
 """
 documentation = "https://docs.rs/"
 edition = "2021"
-homepage = ""
-keywords = ["dynamic service discovery", "dynamic service configuration", "dynamic service management"]
+homepage = "https://github.com/hubertshelley/luoshu"
+keywords = ["discovery", "configuration", "management", "micro-service"]
 license = "Apache-2.0"
 readme = "./README.md"
 repository = "https://github.com/hubertshelley/luoshu"
@@ -40,10 +42,14 @@ tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
 uuid = "1.2.1"
 
-luoshu_configuration = { path = "./crates/configuration" }
-luoshu_connection = { path = "./crates/connection" }
-luoshu_core = { path = "./crates/core" }
-luoshu_namespace = { path = "./crates/namespace" }
-luoshu_registry = { path = "./crates/registry" }
-luoshu_sled_storage = { path = "./crates/sled_storage" }
-luoshu_mem_storage = { path = "./crates/mem_storage" }
+pyo3 = "0.17.1"
+pyo3-asyncio = "0.17.0"
+
+luoshu_configuration = { version = "0.1.0", path = "./crates/configuration" }
+luoshu_connection = { version = "0.1.0", path = "./crates/connection" }
+luoshu_core = { version = "0.1.0", path = "./crates/core" }
+luoshu_namespace = { version = "0.1.0", path = "./crates/namespace" }
+luoshu_registry = { version = "0.1.0", path = "./crates/registry" }
+luoshu_sled_storage = { version = "0.1.0", path = "./crates/sled_storage" }
+luoshu_mem_storage = { version = "0.1.0", path = "./crates/mem_storage" }
+luoshu = { version = "0.1.0", path = "./luoshu" }

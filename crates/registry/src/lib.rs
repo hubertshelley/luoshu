@@ -39,6 +39,10 @@ impl Registry {
         self.services.push(service);
         Ok(())
     }
+    /// 获取服务列表
+    pub fn get_service(&self) -> Vec<Service> {
+        self.services.clone()
+    }
 }
 
 /// 注册中心存储
@@ -85,12 +89,16 @@ where
                 self.values.push(value);
             }
             Some(item) => {
-                for service in &value.services {
-                    for sub_value in item.services.iter_mut() {
-                        if sub_value == service {
-                            sub_value.fresh();
+                if item.services.contains(&value.services[0]) {
+                    for service in &value.services {
+                        for sub_value in item.services.iter_mut() {
+                            if sub_value == service {
+                                sub_value.fresh();
+                            }
                         }
                     }
+                } else {
+                    item.services.push(value.services[0].clone())
                 }
             }
         };
@@ -106,7 +114,7 @@ where
             None => {}
             Some(item) => {
                 for service in &value.services {
-                    item.services.retain(|x| x == service);
+                    item.services.retain(|x| x != service);
                 }
             }
         };
@@ -124,5 +132,13 @@ where
             storage,
             values: vec![],
         }
+    }
+    /// 获取注册中心
+    pub fn get_service(&self, name: String, namespace: Option<String>) -> Option<Registry> {
+        let namespace = namespace.unwrap_or_else(|| String::from("default"));
+        self.values
+            .iter()
+            .cloned()
+            .find(|x| x.name == name && x.namespace == namespace)
     }
 }
