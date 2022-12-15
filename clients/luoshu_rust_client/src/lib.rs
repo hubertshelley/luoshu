@@ -17,7 +17,7 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
-/// 洛书客户端结
+/// 洛书客户端
 ///
 /// 订阅配置信息，并注册服务到洛书
 /// ```
