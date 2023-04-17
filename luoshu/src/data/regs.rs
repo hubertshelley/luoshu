@@ -52,7 +52,8 @@ pub struct ConfigurationReg {
     #[serde(default = "default_namespace")]
     namespace: String,
     pub(crate) name: String,
-    config: Value,
+    /// 配置内容
+    pub config: Value,
 }
 
 impl From<&ConfigurationReg> for Configurator {
@@ -80,6 +81,10 @@ impl ConfigurationReg {
     /// 获取命名空间
     pub fn get_namespace(&self) -> String {
         self.namespace.clone()
+    }
+    /// 获取订阅名称
+    pub fn get_subscribe_str(&self) -> String {
+        format!("{}|{}", self.namespace.clone(), self.name.clone())
     }
 }
 
@@ -133,15 +138,57 @@ impl From<ServiceReg> for LuoshuDataEnum {
     }
 }
 
+/// 洛书同步数据层枚举
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum LuoshuSyncDataEnum {
+    /// 命名空间
+    Namespace(Vec<Namespace>),
+    /// 配置中心
+    Configuration(Vec<Configurator>),
+    /// 注册中心
+    Registry(Vec<Registry>),
+    /// 洛书数据
+    LuoshuData(LuoshuDataEnum),
+}
+
+impl From<LuoshuDataEnum> for LuoshuSyncDataEnum {
+    fn from(data: LuoshuDataEnum) -> Self {
+        Self::LuoshuData(data)
+    }
+}
+
+impl From<Vec<Namespace>> for LuoshuSyncDataEnum {
+    fn from(data: Vec<Namespace>) -> Self {
+        Self::Namespace(data)
+    }
+}
+
+impl From<Vec<Configurator>> for LuoshuSyncDataEnum {
+    fn from(data: Vec<Configurator>) -> Self {
+        Self::Configuration(data)
+    }
+}
+
+impl From<Vec<Registry>> for LuoshuSyncDataEnum {
+    fn from(data: Vec<Registry>) -> Self {
+        Self::Registry(data)
+    }
+}
+
 /// 洛书数据层消息处理器接口
 #[async_trait]
 pub trait LuoshuDataHandle {
     /// 新增数据
-    async fn append(&mut self, value: &LuoshuDataEnum, client: Option<SocketAddr>) -> Result<()>;
+    async fn append(
+        &mut self,
+        value: &LuoshuDataEnum,
+        client: Option<SocketAddr>,
+        sender: Option<&UnboundedSender<Frame>>,
+    ) -> Result<()>;
     /// 删除数据
     async fn remove(&mut self, value: &LuoshuDataEnum) -> Result<()>;
     /// 同步数据
-    async fn sync(&mut self, value: &LuoshuDataEnum) -> Result<()>;
+    async fn sync(&mut self, value: &LuoshuSyncDataEnum) -> Result<()>;
     /// 订阅消息
     async fn subscribe(
         &mut self,
@@ -150,4 +197,10 @@ pub trait LuoshuDataHandle {
     ) -> Result<()>;
     /// 连接断开
     async fn broken(&mut self, client: SocketAddr) -> Result<()>;
+}
+
+/// 洛书数据层服务处理器接口
+pub trait LuoshuDataServiceHandle {
+    /// 获取服务
+    fn get_service(&mut self, name: String, namespace: Option<String>) -> Vec<Service>;
 }

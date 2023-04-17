@@ -1,11 +1,13 @@
-use crate::data::{Frame, LuoshuDataEnum, LuoshuDataHandle, Subscribe};
+use crate::data::{
+    Frame, LuoshuDataEnum, LuoshuDataHandle, LuoshuDataServiceHandle, LuoshuSyncDataEnum, Subscribe,
+};
 use anyhow::Result;
 use async_trait::async_trait;
 use luoshu_configuration::ConfiguratorStore;
 use luoshu_core::Store;
 use luoshu_mem_storage::LuoshuMemStorage;
 use luoshu_namespace::NamespaceStore;
-use luoshu_registry::RegistryStore;
+use luoshu_registry::{RegistryStore, Service};
 use std::net::SocketAddr;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -42,8 +44,14 @@ impl Default for LuoshuMemData {
 
 #[async_trait]
 impl LuoshuDataHandle for LuoshuMemData {
-    async fn append(&mut self, value: &LuoshuDataEnum, client: Option<SocketAddr>) -> Result<()> {
+    async fn append(
+        &mut self,
+        value: &LuoshuDataEnum,
+        client: Option<SocketAddr>,
+        sender: Option<&UnboundedSender<Frame>>,
+    ) -> Result<()> {
         let _ = client;
+        let _ = sender;
         match value {
             LuoshuDataEnum::Namespace(value) => self.namespace_store.append(value.into())?,
             LuoshuDataEnum::Configuration(value) => {
@@ -66,14 +74,15 @@ impl LuoshuDataHandle for LuoshuMemData {
         Ok(())
     }
 
-    async fn sync(&mut self, value: &LuoshuDataEnum) -> Result<()> {
+    async fn sync(&mut self, value: &LuoshuSyncDataEnum) -> Result<()> {
         match value {
-            LuoshuDataEnum::Namespace(_) => {}
-            LuoshuDataEnum::Configuration(config) => {
-                println!("{:#?}", config);
+            LuoshuSyncDataEnum::Namespace(_) => {}
+            LuoshuSyncDataEnum::Configuration(_) => {}
+            LuoshuSyncDataEnum::Registry(registries) => {
+                print!("{:#?}", registries);
+                self.service_store.set_values(registries.clone())
             }
-            LuoshuDataEnum::Service(_) => {}
-            LuoshuDataEnum::Subscribe(_) => {}
+            LuoshuSyncDataEnum::LuoshuData(_) => {}
         };
         Ok(())
     }
@@ -90,5 +99,16 @@ impl LuoshuDataHandle for LuoshuMemData {
     async fn broken(&mut self, client: SocketAddr) -> Result<()> {
         let _ = client;
         Ok(())
+    }
+}
+
+impl LuoshuDataServiceHandle for LuoshuMemData {
+    fn get_service(&mut self, name: String, namespace: Option<String>) -> Vec<Service> {
+        match self.service_store.get_service(name, namespace) {
+            None => {
+                vec![]
+            }
+            Some(registry) => registry.get_service(),
+        }
     }
 }

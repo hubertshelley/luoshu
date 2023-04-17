@@ -1,0 +1,14 @@
+[package]
+name = "luoshu_client_test"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+luoshu_rust_client = { path = "../../clients/luoshu_rust_client" }

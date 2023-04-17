@@ -1,5 +1,6 @@
 use crate::data::{
-    ActionEnum, ConfigurationReg, Frame, LuoshuDataEnum, LuoshuDataHandle, Subscribe,
+    ActionEnum, ConfigurationReg, Frame, LuoshuDataEnum, LuoshuDataHandle, LuoshuSyncDataEnum,
+    Subscribe,
 };
 use anyhow::Result;
 use async_trait::async_trait;
@@ -23,6 +24,7 @@ pub struct LuoshuSledData {
     pub service_store: RegistryStore<LuoshuSledStorage>,
     config_subscribers: HashMap<String, Vec<UnboundedSender<Frame>>>,
     service_book: HashMap<SocketAddr, ServiceReg>,
+    sender_list: Vec<UnboundedSender<Frame>>,
 }
 
 impl LuoshuSledData {
@@ -38,7 +40,16 @@ impl LuoshuSledData {
             service_store,
             config_subscribers: HashMap::new(),
             service_book: HashMap::new(),
+            sender_list: vec![],
         }
+    }
+    fn send_sync_message(&mut self) -> Result<()> {
+        self.sender_list.retain(|sender| {
+            sender
+                .send(ActionEnum::Sync(self.service_store.get_values().into()).into())
+                .is_ok()
+        });
+        Ok(())
     }
 }
 
@@ -50,7 +61,12 @@ impl Default for LuoshuSledData {
 
 #[async_trait]
 impl LuoshuDataHandle for LuoshuSledData {
-    async fn append(&mut self, value: &LuoshuDataEnum, client: Option<SocketAddr>) -> Result<()> {
+    async fn append(
+        &mut self,
+        value: &LuoshuDataEnum,
+        client: Option<SocketAddr>,
+        sender: Option<&UnboundedSender<Frame>>,
+    ) -> Result<()> {
         match value {
             LuoshuDataEnum::Namespace(value) => {
                 self.namespace_store.append(value.into())?;
@@ -66,7 +82,12 @@ impl LuoshuDataHandle for LuoshuSledData {
                     Some(subscribers) => {
                         let mut pre_delete_list = vec![];
                         for (index, subscriber) in subscribers.iter().enumerate() {
-                            match subscriber.send(ActionEnum::Sync(value.clone().into()).into()) {
+                            match subscriber.send(
+                                ActionEnum::Sync(LuoshuSyncDataEnum::LuoshuData(
+                                    value.clone().into(),
+                                ))
+                                .into(),
+                            ) {
                                 Ok(_) => {}
                                 Err(_) => {
                                     pre_delete_list.push(index);
@@ -85,7 +106,12 @@ impl LuoshuDataHandle for LuoshuSledData {
                 if let Some(client) = client {
                     self.service_book.insert(client, value.clone());
                 }
-                self.service_store.append(value.into())?
+                if let Some(sender) = sender {
+                    self.sender_list.push(sender.clone());
+                }
+                println!("Service:{:#?}", value);
+                self.service_store.append(value.into())?;
+                self.send_sync_message()?;
             }
             _ => {}
         };
@@ -103,7 +129,7 @@ impl LuoshuDataHandle for LuoshuSledData {
         Ok(())
     }
 
-    async fn sync(&mut self, value: &LuoshuDataEnum) -> Result<()> {
+    async fn sync(&mut self, value: &LuoshuSyncDataEnum) -> Result<()> {
         let _ = value;
         Ok(())
     }
@@ -128,7 +154,9 @@ impl LuoshuDataHandle for LuoshuSledData {
         {
             if let Some(config) = configurator.get_configuration(subscribe.name.clone()) {
                 let config_reg = ConfigurationReg::new(subscribe.namespace, subscribe.name, config);
-                subscriber_sender.send(ActionEnum::Sync(config_reg.into()).into())?;
+                subscriber_sender.send(
+                    ActionEnum::Sync(LuoshuSyncDataEnum::LuoshuData(config_reg.into())).into(),
+                )?;
             }
         };
         Ok(())
@@ -137,6 +165,7 @@ impl LuoshuDataHandle for LuoshuSledData {
         tracing::info!("连接断开: {}", client);
         if let Some(service) = self.service_book.remove(&client) {
             self.service_store.remove((&service).into())?;
+            self.send_sync_message()?;
         };
         Ok(())
     }

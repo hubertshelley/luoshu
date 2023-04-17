@@ -38,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tokio::select! {
             Ok(Some(frame)) = connection.read_frame() => {
                 match frame.data {
-                    ActionEnum::Up(frame) => data.write().await.append(&frame, None).await?,
+                    ActionEnum::Up(frame) => data.write().await.append(&frame, None, None).await?,
                     ActionEnum::Down(frame) => data.write().await.remove(&frame).await?,
                     ActionEnum::Sync(frame) => data.write().await.sync(&frame).await?,
                     _ => {}
