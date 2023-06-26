@@ -64,7 +64,6 @@ impl From<ActionEnum> for Frame {
     }
 }
 
-#[allow(dead_code)]
 impl Frame {
     /// 消息分析
     pub fn parse(src: &[u8]) -> LuoshuResult<Frame> {

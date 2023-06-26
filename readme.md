@@ -23,3 +23,17 @@
 <img alt="License" src="https://img.shields.io/crates/l/luoshu.svg" />
 </p>
 </div>
+
+### 运行说明
+#### 编译前端
+```shell
+cd luoshu-frontend
+npm install
+npm run build
+
+```
+#### 运行后端
+```shell
+cargo run --release --bin luoshu -- --web
+```
+打开浏览器访问 http://localhost:19999
