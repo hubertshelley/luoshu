@@ -91,9 +91,9 @@ impl LuoshuClient {
                 self.name.clone(),
                 Service::new("127.0.0.1".to_string(), self.port),
             )
-                .into(),
+            .into(),
         )
-            .into();
+        .into();
         self.connection.write_frame(&frame).await?;
         let time_sleep = || async {
             tokio::time::sleep(Duration::from_secs(5)).await;
@@ -142,9 +142,9 @@ impl LuoshuClient {
         callback: F,
         namespace: Option<String>,
     ) -> LuoshuClientResult<()>
-        where
-            F: Fn(C) + Send + 'static,
-            C: Serialize + for<'a> Deserialize<'a>,
+    where
+        F: Fn(C) + Send + 'static,
+        C: Serialize + for<'a> Deserialize<'a>,
     {
         let subscribe = Subscribe::new(namespace.unwrap_or_else(|| String::from("default")), name);
         let subscribe_str = subscribe.to_string();
@@ -183,9 +183,9 @@ impl LuoshuClient {
         callback: F,
         namespace: Option<String>,
     ) -> LuoshuClientResult<()>
-        where
-            F: Fn(C) + Send + 'static,
-            C: Serialize + for<'a> Deserialize<'a>,
+    where
+        F: Fn(C) + Send + 'static,
+        C: Serialize + for<'a> Deserialize<'a>,
     {
         let namespace = namespace.unwrap_or_else(|| String::from("default"));
         self.connection
@@ -196,9 +196,9 @@ impl LuoshuClient {
                         name.clone(),
                         serde_json::from_slice(&serde_json::to_vec(&config)?)?,
                     )
-                        .into(),
-                )
                     .into(),
+                )
+                .into(),
             )
             .await?;
         self.subscribe_config(name, callback, Some(namespace)).await
@@ -211,8 +211,8 @@ impl LuoshuClient {
         config: C,
         namespace: Option<String>,
     ) -> LuoshuClientResult<()>
-        where
-            C: Serialize + for<'a> Deserialize<'a>,
+    where
+        C: Serialize + for<'a> Deserialize<'a>,
     {
         let namespace = namespace.unwrap_or_else(|| String::from("default"));
         self.connection
@@ -223,9 +223,9 @@ impl LuoshuClient {
                         name,
                         serde_json::from_slice(&serde_json::to_vec(&config)?)?,
                     )
-                        .into(),
-                )
                     .into(),
+                )
+                .into(),
             )
             .await
             .map_err(|e| e.into())

@@ -5,10 +5,10 @@ mod resp;
 mod service;
 
 use async_trait::async_trait;
-use salvo::prelude::{TcpListener};
+use salvo::prelude::TcpListener;
+use salvo::serve_static::StaticDir;
 use salvo::{Depot, FlowCtrl, Handler, Request, Response, Router, Server};
 use std::sync::Arc;
-use salvo::serve_static::StaticDir;
 use tokio::sync::RwLock;
 
 use crate::data::LuoshuSledData;
@@ -20,19 +20,20 @@ use service::get_routers as get_service_routers;
 pub async fn run_server(addr: &str, data: Arc<RwLock<LuoshuSledData>>) {
     let set_store = SetStore(data);
 
-    let router = Router::with_hoop(set_store).push(
-        Router::with_path("api")
-            .push(get_service_routers())
-            .push(get_namespace_routers())
-            .push(get_configuration_routers())
-    )
-        .push(Router::with_path("<**path>").get(
-            StaticDir::new([
-                "luoshu-frontend/dist",
-            ])
-                .with_defaults("index.html")
-                .with_listing(true),
-        ));
+    let router = Router::with_hoop(set_store)
+        .push(
+            Router::with_path("api")
+                .push(get_service_routers())
+                .push(get_namespace_routers())
+                .push(get_configuration_routers()),
+        )
+        .push(
+            Router::with_path("<**path>").get(
+                StaticDir::new(["luoshu-frontend/dist"])
+                    .with_defaults("index.html")
+                    .with_listing(true),
+            ),
+        );
 
     tracing::info!("admin listening on: http://{}", addr);
 
