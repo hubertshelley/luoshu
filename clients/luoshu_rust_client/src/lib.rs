@@ -17,7 +17,39 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
-/// 洛书客户端结构体
+/// 洛书客户端
+///
+/// 订阅配置信息，并注册服务到洛书
+/// ```
+/// use std::thread::sleep;
+/// use luoshu_rust_client::LuoshuClient;
+///
+/// #[derive(Debug, Serialize, Deserialize, Clone)]
+/// struct Config {
+///     test1: String,
+///     test2: Vec<usize>,
+/// }
+///
+/// #[tokio::test]
+/// async fn it_works() -> LuoshuClientResult<()> {
+///     let mut client = LuoshuClient::new(15666, "test_rust_server".to_string(), None).await;
+///     client
+///         .subscribe_config(
+///             "test_config2".to_string(),
+///             |config: Config| println!("config changed:{:#?}", config),
+///             None,
+///         )
+///         .await?;
+///     tokio::spawn(async move {
+///         client.registry().await.expect("TODO: panic message");
+///     });
+///     // loop {
+///     //     println!("sleep");
+///     //     sleep(Duration::from_secs(10))
+///     // }
+///     Ok(())
+/// }
+/// ```
 pub struct LuoshuClient {
     namespace: String,
     name: String,

@@ -1,0 +1,3 @@
+[submodule "luoshu-frontend"]
+	path = luoshu-frontend
+	url = https://github.com/hubertshelley/luoshu-frontend
